@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
-using UnityEngine.EventSystems; // Required for interaction detection
+using UnityEngine.EventSystems;
 using System.Collections;
-using System.Collections.Generic;
 
 public class DripFillController : MonoBehaviour, IPointerClickHandler
 {
-    public static DripFillController lastSelectedObject = null; // ✅ Tracks last selected object
+    public static DripFillController lastSelectedObject = null;
 
     public float fillSpeed = 0.2f;
     private float currentFillLevel = 0f;
@@ -14,6 +13,9 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     private Vector3 originalPosition;
     public ParticleSystem dripParticles;
     public Material rippleMaterial;
+    private bool buttonClicked = false; // ✅ Tracks if the button was clicked
+    private bool shouldRipple = false;
+
 
     private static readonly int FillAmount = Shader.PropertyToID("_FillAmount");
     private static readonly int ObjectHeight = Shader.PropertyToID("_ObjectHeight");
@@ -22,6 +24,22 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     {
         originalScale = transform.localScale;
         originalPosition = transform.position;
+
+        Debug.Log($"🔹 {gameObject.name} - Start(): originalScale={originalScale}, originalPosition={originalPosition}");
+
+        if (rippleMaterial == null)
+        {
+            Renderer renderer = GetComponent<Renderer>();
+            if (renderer != null)
+            {
+                rippleMaterial = renderer.material;
+                Debug.Log($"✔ {gameObject.name} - Assigned material: {rippleMaterial.name}");
+            }
+            else
+            {
+                Debug.LogError($"❌ {gameObject.name} - No Renderer found!");
+            }
+        }
 
         if (rippleMaterial != null)
         {
@@ -33,59 +51,66 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         ApplyDripEffect();
     }
 
+    void Update()
+    {
+        if (rippleMaterial != null)
+        {
+            float wobbleFactor = Mathf.Sin(Time.time * 10f) * 0.05f; // ✅ Adjust frequency/amplitude as needed
+            rippleMaterial.SetFloat("_FillAmount", currentFillLevel + wobbleFactor);
+        }
+    }
+
+
     void ApplyDripEffect()
     {
-        float curvedFill = Mathf.Pow(currentFillLevel, 1.5f);
 
-        // 🔹 Adjust cube scale properly (based on original scale)
+        // ✅ Fix scale calculations ONLY for the cube
         transform.localScale = new Vector3(
             originalScale.x,
             Mathf.Lerp(0.01f * originalScale.y, originalScale.y, currentFillLevel),
             originalScale.z
         );
 
-        transform.position = new Vector3(
-            originalPosition.x,
-            originalPosition.y + (originalScale.y * (currentFillLevel - 1) / 2),
-            originalPosition.z
-        );
-
-        // 🔹 Ensure Material is Assigned & Shader Updates
-        if (rippleMaterial == null)
+        // ✅ Fix position calculations (no INF/NaN errors)
+        float newYPosition = originalPosition.y + (originalScale.y * (currentFillLevel - 1) / 2);
+        if (float.IsNaN(newYPosition) || float.IsInfinity(newYPosition))
         {
-            Renderer renderer = GetComponent<Renderer>();
-            if (renderer != null)
-            {
-                rippleMaterial = renderer.material; // ✅ Ensure the reference is set
-            }
+            Debug.LogError($"❌ {gameObject.name} - Invalid Y position! Resetting.");
+            newYPosition = originalPosition.y;
         }
+        transform.position = new Vector3(transform.position.x, newYPosition, transform.position.z);
 
+        // ✅ Ensure ripple effect only happens when the drip animation is running
+        bool shouldRipple = isDripping && currentFillLevel < 1.0f;
+
+        // ✅ Update shader properties
         if (rippleMaterial != null)
         {
             rippleMaterial.SetFloat("_FillAmount", currentFillLevel);
             rippleMaterial.SetFloat("_ObjectHeight", originalScale.y);
-        }
-        else
-        {
-            Debug.LogError("❌ Ripple Material is STILL null on: " + gameObject.name);
+            rippleMaterial.SetFloat("_RippleStrength", shouldRipple ? 0.3f : 0.0f); // ✅ Ripple only during drip animation
         }
 
-        // ✅ Ensure the particle system updates properly
+        // ✅ Ensure particle system is ONLY toggled on/off (NEVER SCALED)
         if (dripParticles != null)
         {
-            if (currentFillLevel >= 1f && dripParticles.isPlaying)
+            if (buttonClicked)
             {
-                dripParticles.Stop();
-            }
-            else if (currentFillLevel < 1f && !dripParticles.isPlaying)
-            {
-                dripParticles.Play();
+                if (!dripParticles.gameObject.activeSelf && currentFillLevel < 1f)
+                {
+                    dripParticles.gameObject.SetActive(true);
+                    dripParticles.Play();
+                    Debug.Log($"🔥 {gameObject.name} - Drip Particles Activated!");
+                }
+                else if (currentFillLevel >= 1f && dripParticles.isPlaying)
+                {
+                    dripParticles.Stop();
+                    StartCoroutine(DeactivateParticles());
+                }
             }
         }
-        else
-        {
-            Debug.LogError("❌ Drip Particles missing on: " + gameObject.name);
-        }
+
+        Debug.Log($"✔ {gameObject.name} - Shader updated, Ripple active: {shouldRipple}");
     }
 
 
@@ -96,47 +121,48 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public void SetFillLevel(float value)
     {
         StopAllCoroutines();
-        isDripping = false;
-
+        isDripping = false; // ✅ Prevents rippling when using the slider
         currentFillLevel = Mathf.Clamp(value, 0f, 1f);
         ApplyDripEffect();
-
-        if (currentFillLevel >= 1f && dripParticles.isPlaying)
-        {
-            dripParticles.Stop();
-        }
-        else if (currentFillLevel < 1f && !dripParticles.isPlaying)
-        {
-            dripParticles.Play();
-        }
     }
 
 
-    // ✅ When clicked, this object becomes the selected one
+
+
     public void OnPointerClick(PointerEventData eventData)
     {
         lastSelectedObject = this;
-        Debug.Log($"✔ {gameObject.name} is now selected for reset.");
+        buttonClicked = true; // ✅ Mark the button as clicked
+        Debug.Log($"✔ {gameObject.name} - Button clicked, particles enabled!");
     }
+
 
     public void ResetDripEffect()
     {
+        Debug.Log($"🔄 {gameObject.name} - ResetDripEffect()");
         StopAllCoroutines();
         isDripping = true;
         currentFillLevel = 0f;
 
-        transform.localScale = new Vector3(originalScale.x, 0.01f * originalScale.y, originalScale.z);
-        transform.position = originalPosition;
+        // ✅ Store current position so it doesn't reset
+        Vector3 preservedPosition = transform.position;
+
+        ApplyDripEffect();
+
+        // ✅ Restore the preserved position
+        transform.position = preservedPosition;
 
         if (dripParticles != null)
         {
             dripParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             dripParticles.Clear();
-            dripParticles.Play();
+            dripParticles.gameObject.SetActive(false); // ✅ Hide it again on reset
         }
 
         StartCoroutine(DripFillAnimation());
     }
+
+
 
     IEnumerator DripFillAnimation()
     {
@@ -148,12 +174,50 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
 
             ApplyDripEffect();
 
-            if (currentFillLevel >= 1f && dripParticles.isPlaying)
+            if (dripParticles != null)
             {
-                dripParticles.Stop();
+                if (currentFillLevel < 1f && !dripParticles.isPlaying)
+                {
+                    dripParticles.gameObject.SetActive(true);
+                    dripParticles.Play();
+                }
+                else if (currentFillLevel >= 1f && dripParticles.isPlaying)
+                {
+                    dripParticles.Stop();
+                    StartCoroutine(DeactivateParticles()); // ✅ Only deactivate after stopping
+                }
             }
 
             yield return null;
         }
     }
+
+
+    public void RefreshMaterial()
+    {
+        if (rippleMaterial != null)
+        {
+            rippleMaterial.SetFloat("_ObjectHeight", originalScale.y);
+            rippleMaterial.SetFloat("_FillAmount", currentFillLevel);
+
+            Renderer objRenderer = GetComponent<Renderer>();
+            if (objRenderer != null)
+            {
+                objRenderer.material = rippleMaterial;
+                Debug.Log($"✔ {gameObject.name} - Shader refreshed.");
+            }
+        }
+    }
+
+    IEnumerator DeactivateParticles()
+    {
+        yield return new WaitForSeconds(0.1f); // ✅ Ensures particles fully stop before hiding
+        if (dripParticles != null && !dripParticles.isPlaying)
+        {
+            dripParticles.gameObject.SetActive(false);
+        }
+    }
+
+
+
 }

@@ -4,10 +4,11 @@ using System.Collections.Generic;
 
 public class AutoSetupPrefab : MonoBehaviour
 {
-    public Material defaultRippleMaterial;
-    public ParticleSystem particleSystemPrefab;
-    public Slider globalFillSlider;
-    private List<GameObject> trackedObjects = new List<GameObject>();
+    public Material defaultRippleMaterial;   // Default material for ripple effect
+    public ParticleSystem particleSystemPrefab; // Prefab for the particle system
+    public Slider globalFillSlider; // Global UI slider to control fill levels
+
+    private List<GameObject> trackedObjects = new List<GameObject>(); // List of prefabs that have already been configured
 
     void Update()
     {
@@ -16,16 +17,18 @@ public class AutoSetupPrefab : MonoBehaviour
 
     void CheckForNewPrefabs()
     {
+        // Find all objects in the scene
         GameObject[] allObjects = FindObjectsByType<GameObject>(FindObjectsSortMode.None);
 
         foreach (GameObject obj in allObjects)
         {
-            if (!trackedObjects.Contains(obj) && obj.name.Contains("Clone")) // Only process new clones
+            // Only process new prefabs that contain "Clone" in their name (instantiated objects)
+            if (!trackedObjects.Contains(obj) && obj.name.Contains("Clone"))
             {
-                // ✅ Ignore Particle Systems completely
-                if (obj.GetComponent<ParticleSystem>() != null)
+                if (obj.GetComponent<Renderer>() == null)
                 {
-                    continue; // Skip this object silently
+                    Debug.LogWarning($"⚠ Skipping {obj.name} - No Renderer detected.");
+                    continue;
                 }
 
                 SetupPrefab(obj);
@@ -34,76 +37,76 @@ public class AutoSetupPrefab : MonoBehaviour
         }
     }
 
-
-
     void SetupPrefab(GameObject obj)
     {
-        Debug.Log($"🛠 Auto-configuring: {obj.name}");
+        Debug.Log($"🛠 Configuring: {obj.name}");
 
-        // ✅ Ensure it has a Rigidbody
-        Rigidbody rb = obj.GetComponent<Rigidbody>();
-        if (rb == null)
+        // ✅ Add DripFillController ONLY if the object is NOT a particle system
+        if (obj.GetComponent<MeshRenderer>() != null)
         {
-            rb = obj.AddComponent<Rigidbody>();
-            rb.isKinematic = true;
-        }
+            DripFillController dripFill = obj.GetComponent<DripFillController>() ?? obj.AddComponent<DripFillController>();
 
-        // ✅ Ensure it has the required scripts
-        DripFillController dripFill = obj.GetComponent<DripFillController>();
-        if (dripFill == null)
-        {
-            dripFill = obj.AddComponent<DripFillController>();
-        }
-
-        WallFillSlider sliderScript = obj.GetComponent<WallFillSlider>();
-        if (sliderScript == null)
-        {
-            sliderScript = obj.AddComponent<WallFillSlider>();
-        }
-
-        // ✅ Assign Global Slider (if found)
-        Slider globalSlider = FindAnyObjectByType<Slider>(); // 🔹 Modern replacement
-        if (globalSlider != null)
-        {
-            sliderScript.fillSlider = globalSlider;
-            sliderScript.dripFillController = obj.GetComponent<DripFillController>();
-        }
-
-        if (obj.GetComponent<CollisionDebugger>() == null)
-        {
-            obj.AddComponent<CollisionDebugger>();
-        }
-
-        // ✅ Assign Material and ensure DripFillController has reference
-        Renderer renderer = obj.GetComponent<Renderer>();
-        if (renderer != null && defaultRippleMaterial != null)
-        {
-            renderer.material = defaultRippleMaterial;
-            dripFill.rippleMaterial = renderer.material;
-        }
-
-        // ✅ Ensure the prefab has a Particle System
-        if (particleSystemPrefab != null)
-        {
-            ParticleSystem existingParticles = obj.GetComponentInChildren<ParticleSystem>();
-            if (existingParticles == null)
+            // ✅ Assign material only if MeshRenderer exists
+            if (defaultRippleMaterial != null)
             {
-                ParticleSystem newParticles = Instantiate(particleSystemPrefab, obj.transform);
-                dripFill.dripParticles = newParticles;
-                Debug.Log($"✨ Added Particle System to {obj.name}");
+                Material newMat = new Material(defaultRippleMaterial);
+                obj.GetComponent<MeshRenderer>().material = newMat;
+                dripFill.rippleMaterial = newMat;
             }
-            else
+
+            // ✅ Ensure it has a WallFillSlider
+            WallFillSlider sliderScript = obj.GetComponent<WallFillSlider>() ?? obj.AddComponent<WallFillSlider>();
+            if (globalFillSlider != null)
             {
-                dripFill.dripParticles = existingParticles;
+                sliderScript.fillSlider = globalFillSlider;
+                sliderScript.dripFillController = dripFill;
             }
+
+            // ✅ Assign Particle System (NEXT STEP)
+            SetupParticleSystem(obj, dripFill);
+        }
+        else
+        {
+            Debug.Log($"⚠ Skipping {obj.name} - It appears to be a particle system.");
         }
 
-        Debug.Log($"✔ {obj.name} is now fully configured.");
+        Debug.Log($"✔ {obj.name} - Fully Configured.");
     }
 
 
 
 
+    void SetupParticleSystem(GameObject obj, DripFillController dripFill)
+    {
+        if (particleSystemPrefab == null)
+        {
+            Debug.LogError($"❌ {obj.name} - Particle system prefab is missing! Assign it in the Inspector.");
+            return;
+        }
+
+        // ✅ Ensure the prefab does NOT already have a particle system
+        if (dripFill.dripParticles != null)
+        {
+            Debug.Log($"✔ {obj.name} - Using existing Particle System.");
+            return;
+        }
+
+        // ✅ Instantiate as a child, but do NOT add DripFillController
+        ParticleSystem newParticles = Instantiate(particleSystemPrefab, obj.transform);
+        newParticles.transform.localPosition = new Vector3(0, 0.85f, 0);
+        newParticles.transform.localRotation = Quaternion.identity;
+
+        // ✅ Prevent scaling issues
+        newParticles.transform.localScale = Vector3.one;
+
+        // ✅ Assign it to DripFillController, but don't modify it in that script
+        dripFill.dripParticles = newParticles;
+
+        // ✅ Disable it by default
+        newParticles.gameObject.SetActive(false);
+
+        Debug.Log($"✨ {obj.name} - Added Particle System above object.");
+    }
 
 
 }

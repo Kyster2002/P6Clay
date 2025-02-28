@@ -56,15 +56,20 @@
                 // ✅ Only allow the bottom to ripple for a short time, then stop
                 float waveIntensity = heightFactor * bottomFactor; 
 
-                if (worldPos.y >= fillHeight)
+ // ✅ Only ripple if fill is NOT at 100%
+if (_FillAmount < 1.0)
 {
-    float distanceToCenter = length(worldPos.xz);
-    float wave = sin(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
-                 cos(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
-                 _RippleStrength;
+    if (worldPos.y >= fillHeight)
+    {
+        float distanceToCenter = length(worldPos.xz);
+        float wave = sin(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
+                     cos(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
+                     _RippleStrength;
 
-    worldPos.y += wave; // ✅ Forces ripple movement
+        worldPos.y += wave; // ✅ Forces ripple movement
+    }
 }
+
 
                 OUT.positionCS = TransformWorldToHClip(worldPos);
                 OUT.uv = IN.uv;
