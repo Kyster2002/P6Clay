@@ -1,0 +1,62 @@
+{
+    "name": "PlayerInput 1",
+    "maps": [
+        {
+            "name": "Maptoggle",
+            "id": "2f3eb0eb-9ec1-43f7-80f3-10747e17fc82",
+            "actions": [
+                {
+                    "name": "B",
+                    "type": "Button",
+                    "id": "222cbb9f-40e6-42bc-a710-38933a9a09a9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "7181944f-3ad7-48a0-936b-f87fa8908c1a",
+                    "path": "<XRController>{RightHand}/primaryButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "B",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "XRcontrols",
+            "id": "536c7b44-a66f-4d55-8518-ccfec8282933",
+            "actions": [
+                {
+                    "name": "Select button",
+                    "type": "Button",
+                    "id": "ba112abd-0a28-4859-ad3e-496fc520e94d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "7a5c2648-db57-4d72-955e-deca2888f757",
+                    "path": "<XRController>{LeftHand}/trigger  ",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select button",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
