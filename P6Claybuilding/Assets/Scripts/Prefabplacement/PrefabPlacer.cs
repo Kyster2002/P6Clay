@@ -44,7 +44,7 @@ public class PrefabPlacer : MonoBehaviour
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, placementLayers))
         {
             // Place slightly above the surface
-            Vector3 spawnPoint = hit.point + Vector3.up * 0.01f;
+            Vector3 spawnPoint = hit.point + Vector3.up * 0.05f;
 
             // Use prefab's default rotation
             Quaternion spawnRotation = prefabToPlace.transform.rotation;
