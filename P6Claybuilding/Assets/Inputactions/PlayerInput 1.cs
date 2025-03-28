@@ -133,7 +133,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""7a5c2648-db57-4d72-955e-deca2888f757"",
-                    ""path"": ""<XRController>{LeftHand}/trigger  "",
+                    ""path"": ""<XRController>{LeftHand}/{SecondaryTrigger}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -144,11 +144,11 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
             ]
         },
         {
-            ""name"": ""LeftInteract"",
+            ""name"": ""LeftSet"",
             ""id"": ""a820cfbf-49f7-4825-9d4f-203fe4b06d95"",
             ""actions"": [
                 {
-                    ""name"": ""New action"",
+                    ""name"": ""Set"",
                     ""type"": ""Button"",
                     ""id"": ""02549e21-42fe-4612-b3d6-33cebb9c600d"",
                     ""expectedControlType"": """",
@@ -165,7 +165,63 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
+                    ""action"": ""Set"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""LeftDelete"",
+            ""id"": ""6258f582-b1a5-4677-a487-98367463260d"",
+            ""actions"": [
+                {
+                    ""name"": ""New action"",
+                    ""type"": ""Button"",
+                    ""id"": ""8cf19d50-c9c9-4dcf-b4a1-6ed5952d089f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""baa87289-4c93-4f40-9165-4016250bd780"",
+                    ""path"": ""<XRController>{LeftHand}/{SecondaryButton}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
                     ""action"": ""New action"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
+        },
+        {
+            ""name"": ""SelectWall"",
+            ""id"": ""e683e6e6-b172-4e89-a258-e848aa49cf06"",
+            ""actions"": [
+                {
+                    ""name"": ""WallSelection"",
+                    ""type"": ""Button"",
+                    ""id"": ""062871a4-57a3-4077-92d1-dc1e6b000049"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""63a29c89-2319-4ddf-a345-746814b57123"",
+                    ""path"": ""<XRController>{LeftHand}/{TriggerButton}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""WallSelection"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -180,16 +236,24 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         // XRcontrols
         m_XRcontrols = asset.FindActionMap("XRcontrols", throwIfNotFound: true);
         m_XRcontrols_Selectbutton = m_XRcontrols.FindAction("Select button", throwIfNotFound: true);
-        // LeftInteract
-        m_LeftInteract = asset.FindActionMap("LeftInteract", throwIfNotFound: true);
-        m_LeftInteract_Newaction = m_LeftInteract.FindAction("New action", throwIfNotFound: true);
+        // LeftSet
+        m_LeftSet = asset.FindActionMap("LeftSet", throwIfNotFound: true);
+        m_LeftSet_Set = m_LeftSet.FindAction("Set", throwIfNotFound: true);
+        // LeftDelete
+        m_LeftDelete = asset.FindActionMap("LeftDelete", throwIfNotFound: true);
+        m_LeftDelete_Newaction = m_LeftDelete.FindAction("New action", throwIfNotFound: true);
+        // SelectWall
+        m_SelectWall = asset.FindActionMap("SelectWall", throwIfNotFound: true);
+        m_SelectWall_WallSelection = m_SelectWall.FindAction("WallSelection", throwIfNotFound: true);
     }
 
     ~@XRbutton()
     {
         UnityEngine.Debug.Assert(!m_Maptoggle.enabled, "This will cause a leak and performance issues, XRbutton.Maptoggle.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_XRcontrols.enabled, "This will cause a leak and performance issues, XRbutton.XRcontrols.Disable() has not been called.");
-        UnityEngine.Debug.Assert(!m_LeftInteract.enabled, "This will cause a leak and performance issues, XRbutton.LeftInteract.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_LeftSet.enabled, "This will cause a leak and performance issues, XRbutton.LeftSet.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_LeftDelete.enabled, "This will cause a leak and performance issues, XRbutton.LeftDelete.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_SelectWall.enabled, "This will cause a leak and performance issues, XRbutton.SelectWall.Disable() has not been called.");
     }
 
     /// <summary>
@@ -454,29 +518,29 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
     /// </summary>
     public XRcontrolsActions @XRcontrols => new XRcontrolsActions(this);
 
-    // LeftInteract
-    private readonly InputActionMap m_LeftInteract;
-    private List<ILeftInteractActions> m_LeftInteractActionsCallbackInterfaces = new List<ILeftInteractActions>();
-    private readonly InputAction m_LeftInteract_Newaction;
+    // LeftSet
+    private readonly InputActionMap m_LeftSet;
+    private List<ILeftSetActions> m_LeftSetActionsCallbackInterfaces = new List<ILeftSetActions>();
+    private readonly InputAction m_LeftSet_Set;
     /// <summary>
-    /// Provides access to input actions defined in input action map "LeftInteract".
+    /// Provides access to input actions defined in input action map "LeftSet".
     /// </summary>
-    public struct LeftInteractActions
+    public struct LeftSetActions
     {
         private @XRbutton m_Wrapper;
 
         /// <summary>
         /// Construct a new instance of the input action map wrapper class.
         /// </summary>
-        public LeftInteractActions(@XRbutton wrapper) { m_Wrapper = wrapper; }
+        public LeftSetActions(@XRbutton wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "LeftInteract/Newaction".
+        /// Provides access to the underlying input action "LeftSet/Set".
         /// </summary>
-        public InputAction @Newaction => m_Wrapper.m_LeftInteract_Newaction;
+        public InputAction @Set => m_Wrapper.m_LeftSet_Set;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
-        public InputActionMap Get() { return m_Wrapper.m_LeftInteract; }
+        public InputActionMap Get() { return m_Wrapper.m_LeftSet; }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
         public void Enable() { Get().Enable(); }
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
@@ -484,9 +548,9 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
         public bool enabled => Get().enabled;
         /// <summary>
-        /// Implicitly converts an <see ref="LeftInteractActions" /> to an <see ref="InputActionMap" /> instance.
+        /// Implicitly converts an <see ref="LeftSetActions" /> to an <see ref="InputActionMap" /> instance.
         /// </summary>
-        public static implicit operator InputActionMap(LeftInteractActions set) { return set.Get(); }
+        public static implicit operator InputActionMap(LeftSetActions set) { return set.Get(); }
         /// <summary>
         /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
         /// </summary>
@@ -494,11 +558,107 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
         /// </remarks>
-        /// <seealso cref="LeftInteractActions" />
-        public void AddCallbacks(ILeftInteractActions instance)
+        /// <seealso cref="LeftSetActions" />
+        public void AddCallbacks(ILeftSetActions instance)
         {
-            if (instance == null || m_Wrapper.m_LeftInteractActionsCallbackInterfaces.Contains(instance)) return;
-            m_Wrapper.m_LeftInteractActionsCallbackInterfaces.Add(instance);
+            if (instance == null || m_Wrapper.m_LeftSetActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_LeftSetActionsCallbackInterfaces.Add(instance);
+            @Set.started += instance.OnSet;
+            @Set.performed += instance.OnSet;
+            @Set.canceled += instance.OnSet;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="LeftSetActions" />
+        private void UnregisterCallbacks(ILeftSetActions instance)
+        {
+            @Set.started -= instance.OnSet;
+            @Set.performed -= instance.OnSet;
+            @Set.canceled -= instance.OnSet;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="LeftSetActions.UnregisterCallbacks(ILeftSetActions)" />.
+        /// </summary>
+        /// <seealso cref="LeftSetActions.UnregisterCallbacks(ILeftSetActions)" />
+        public void RemoveCallbacks(ILeftSetActions instance)
+        {
+            if (m_Wrapper.m_LeftSetActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="LeftSetActions.AddCallbacks(ILeftSetActions)" />
+        /// <seealso cref="LeftSetActions.RemoveCallbacks(ILeftSetActions)" />
+        /// <seealso cref="LeftSetActions.UnregisterCallbacks(ILeftSetActions)" />
+        public void SetCallbacks(ILeftSetActions instance)
+        {
+            foreach (var item in m_Wrapper.m_LeftSetActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_LeftSetActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="LeftSetActions" /> instance referencing this action map.
+    /// </summary>
+    public LeftSetActions @LeftSet => new LeftSetActions(this);
+
+    // LeftDelete
+    private readonly InputActionMap m_LeftDelete;
+    private List<ILeftDeleteActions> m_LeftDeleteActionsCallbackInterfaces = new List<ILeftDeleteActions>();
+    private readonly InputAction m_LeftDelete_Newaction;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "LeftDelete".
+    /// </summary>
+    public struct LeftDeleteActions
+    {
+        private @XRbutton m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public LeftDeleteActions(@XRbutton wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "LeftDelete/Newaction".
+        /// </summary>
+        public InputAction @Newaction => m_Wrapper.m_LeftDelete_Newaction;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_LeftDelete; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="LeftDeleteActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(LeftDeleteActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="LeftDeleteActions" />
+        public void AddCallbacks(ILeftDeleteActions instance)
+        {
+            if (instance == null || m_Wrapper.m_LeftDeleteActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_LeftDeleteActionsCallbackInterfaces.Add(instance);
             @Newaction.started += instance.OnNewaction;
             @Newaction.performed += instance.OnNewaction;
             @Newaction.canceled += instance.OnNewaction;
@@ -510,8 +670,8 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <remarks>
         /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
         /// </remarks>
-        /// <seealso cref="LeftInteractActions" />
-        private void UnregisterCallbacks(ILeftInteractActions instance)
+        /// <seealso cref="LeftDeleteActions" />
+        private void UnregisterCallbacks(ILeftDeleteActions instance)
         {
             @Newaction.started -= instance.OnNewaction;
             @Newaction.performed -= instance.OnNewaction;
@@ -519,12 +679,12 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         }
 
         /// <summary>
-        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="LeftInteractActions.UnregisterCallbacks(ILeftInteractActions)" />.
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="LeftDeleteActions.UnregisterCallbacks(ILeftDeleteActions)" />.
         /// </summary>
-        /// <seealso cref="LeftInteractActions.UnregisterCallbacks(ILeftInteractActions)" />
-        public void RemoveCallbacks(ILeftInteractActions instance)
+        /// <seealso cref="LeftDeleteActions.UnregisterCallbacks(ILeftDeleteActions)" />
+        public void RemoveCallbacks(ILeftDeleteActions instance)
         {
-            if (m_Wrapper.m_LeftInteractActionsCallbackInterfaces.Remove(instance))
+            if (m_Wrapper.m_LeftDeleteActionsCallbackInterfaces.Remove(instance))
                 UnregisterCallbacks(instance);
         }
 
@@ -534,21 +694,117 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <remarks>
         /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
         /// </remarks>
-        /// <seealso cref="LeftInteractActions.AddCallbacks(ILeftInteractActions)" />
-        /// <seealso cref="LeftInteractActions.RemoveCallbacks(ILeftInteractActions)" />
-        /// <seealso cref="LeftInteractActions.UnregisterCallbacks(ILeftInteractActions)" />
-        public void SetCallbacks(ILeftInteractActions instance)
+        /// <seealso cref="LeftDeleteActions.AddCallbacks(ILeftDeleteActions)" />
+        /// <seealso cref="LeftDeleteActions.RemoveCallbacks(ILeftDeleteActions)" />
+        /// <seealso cref="LeftDeleteActions.UnregisterCallbacks(ILeftDeleteActions)" />
+        public void SetCallbacks(ILeftDeleteActions instance)
         {
-            foreach (var item in m_Wrapper.m_LeftInteractActionsCallbackInterfaces)
+            foreach (var item in m_Wrapper.m_LeftDeleteActionsCallbackInterfaces)
                 UnregisterCallbacks(item);
-            m_Wrapper.m_LeftInteractActionsCallbackInterfaces.Clear();
+            m_Wrapper.m_LeftDeleteActionsCallbackInterfaces.Clear();
             AddCallbacks(instance);
         }
     }
     /// <summary>
-    /// Provides a new <see cref="LeftInteractActions" /> instance referencing this action map.
+    /// Provides a new <see cref="LeftDeleteActions" /> instance referencing this action map.
     /// </summary>
-    public LeftInteractActions @LeftInteract => new LeftInteractActions(this);
+    public LeftDeleteActions @LeftDelete => new LeftDeleteActions(this);
+
+    // SelectWall
+    private readonly InputActionMap m_SelectWall;
+    private List<ISelectWallActions> m_SelectWallActionsCallbackInterfaces = new List<ISelectWallActions>();
+    private readonly InputAction m_SelectWall_WallSelection;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "SelectWall".
+    /// </summary>
+    public struct SelectWallActions
+    {
+        private @XRbutton m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public SelectWallActions(@XRbutton wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "SelectWall/WallSelection".
+        /// </summary>
+        public InputAction @WallSelection => m_Wrapper.m_SelectWall_WallSelection;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_SelectWall; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="SelectWallActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(SelectWallActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="SelectWallActions" />
+        public void AddCallbacks(ISelectWallActions instance)
+        {
+            if (instance == null || m_Wrapper.m_SelectWallActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_SelectWallActionsCallbackInterfaces.Add(instance);
+            @WallSelection.started += instance.OnWallSelection;
+            @WallSelection.performed += instance.OnWallSelection;
+            @WallSelection.canceled += instance.OnWallSelection;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="SelectWallActions" />
+        private void UnregisterCallbacks(ISelectWallActions instance)
+        {
+            @WallSelection.started -= instance.OnWallSelection;
+            @WallSelection.performed -= instance.OnWallSelection;
+            @WallSelection.canceled -= instance.OnWallSelection;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="SelectWallActions.UnregisterCallbacks(ISelectWallActions)" />.
+        /// </summary>
+        /// <seealso cref="SelectWallActions.UnregisterCallbacks(ISelectWallActions)" />
+        public void RemoveCallbacks(ISelectWallActions instance)
+        {
+            if (m_Wrapper.m_SelectWallActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="SelectWallActions.AddCallbacks(ISelectWallActions)" />
+        /// <seealso cref="SelectWallActions.RemoveCallbacks(ISelectWallActions)" />
+        /// <seealso cref="SelectWallActions.UnregisterCallbacks(ISelectWallActions)" />
+        public void SetCallbacks(ISelectWallActions instance)
+        {
+            foreach (var item in m_Wrapper.m_SelectWallActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_SelectWallActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="SelectWallActions" /> instance referencing this action map.
+    /// </summary>
+    public SelectWallActions @SelectWall => new SelectWallActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "Maptoggle" which allows adding and removing callbacks.
     /// </summary>
@@ -580,11 +836,26 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         void OnSelectbutton(InputAction.CallbackContext context);
     }
     /// <summary>
-    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "LeftInteract" which allows adding and removing callbacks.
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "LeftSet" which allows adding and removing callbacks.
     /// </summary>
-    /// <seealso cref="LeftInteractActions.AddCallbacks(ILeftInteractActions)" />
-    /// <seealso cref="LeftInteractActions.RemoveCallbacks(ILeftInteractActions)" />
-    public interface ILeftInteractActions
+    /// <seealso cref="LeftSetActions.AddCallbacks(ILeftSetActions)" />
+    /// <seealso cref="LeftSetActions.RemoveCallbacks(ILeftSetActions)" />
+    public interface ILeftSetActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Set" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSet(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "LeftDelete" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="LeftDeleteActions.AddCallbacks(ILeftDeleteActions)" />
+    /// <seealso cref="LeftDeleteActions.RemoveCallbacks(ILeftDeleteActions)" />
+    public interface ILeftDeleteActions
     {
         /// <summary>
         /// Method invoked when associated input action "New action" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
@@ -593,5 +864,20 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnNewaction(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "SelectWall" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="SelectWallActions.AddCallbacks(ISelectWallActions)" />
+    /// <seealso cref="SelectWallActions.RemoveCallbacks(ISelectWallActions)" />
+    public interface ISelectWallActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "WallSelection" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnWallSelection(InputAction.CallbackContext context);
     }
 }

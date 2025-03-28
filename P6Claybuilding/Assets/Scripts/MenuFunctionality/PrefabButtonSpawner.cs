@@ -38,7 +38,6 @@ public class PrefabButtonSpawner : MonoBehaviour
             {
                 img.sprite = item.icon;
 
-                // 🧠 Set button size to match sprite's aspect ratio
                 float aspectRatio = item.icon.rect.width / item.icon.rect.height;
                 float baseHeight = 100f;
                 float width = baseHeight * aspectRatio;
@@ -52,6 +51,7 @@ public class PrefabButtonSpawner : MonoBehaviour
             button.onClick.AddListener(() =>
             {
                 selectedPrefab = item.prefab;
+                FindObjectOfType<PrefabPlacer>()?.ForceRefreshGhost();
                 Debug.Log($"Selected prefab: {item.prefab.name}");
             });
         }

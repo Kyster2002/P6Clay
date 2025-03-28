@@ -47,7 +47,7 @@
                 {
                     "name": "",
                     "id": "7a5c2648-db57-4d72-955e-deca2888f757",
-                    "path": "<XRController>{LeftHand}/trigger  ",
+                    "path": "<XRController>{LeftHand}/{SecondaryTrigger}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -58,11 +58,11 @@
             ]
         },
         {
-            "name": "LeftInteract",
+            "name": "LeftSet",
             "id": "a820cfbf-49f7-4825-9d4f-203fe4b06d95",
             "actions": [
                 {
-                    "name": "New action",
+                    "name": "Set",
                     "type": "Button",
                     "id": "02549e21-42fe-4612-b3d6-33cebb9c600d",
                     "expectedControlType": "",
@@ -79,7 +79,63 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
+                    "action": "Set",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "LeftDelete",
+            "id": "6258f582-b1a5-4677-a487-98367463260d",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "8cf19d50-c9c9-4dcf-b4a1-6ed5952d089f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "baa87289-4c93-4f40-9165-4016250bd780",
+                    "path": "<XRController>{LeftHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
                     "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "SelectWall",
+            "id": "e683e6e6-b172-4e89-a258-e848aa49cf06",
+            "actions": [
+                {
+                    "name": "WallSelection",
+                    "type": "Button",
+                    "id": "062871a4-57a3-4077-92d1-dc1e6b000049",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "63a29c89-2319-4ddf-a345-746814b57123",
+                    "path": "<XRController>{LeftHand}/{TriggerButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "WallSelection",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class VRMenuSpawner : MonoBehaviour
@@ -38,6 +38,7 @@ public class VRMenuSpawner : MonoBehaviour
     {
         if (toggleMenuAction != null)
             toggleMenuAction.action.performed -= ToggleMenu;
+
     }
 
     void Update()
@@ -49,7 +50,7 @@ public class VRMenuSpawner : MonoBehaviour
         Vector3 targetPosition = rightController.position + rightController.TransformDirection(offset);
         menuCanvas.transform.position = Vector3.Lerp(menuCanvas.transform.position, targetPosition, Time.deltaTime * followSpeed);
 
-        // Face the player�s head
+        // Face the player’s head
         Vector3 lookDirection = menuCanvas.transform.position - headCamera.position;
         lookDirection.y = 0; // Optional: Y-axis only
         menuCanvas.transform.rotation = Quaternion.LookRotation(lookDirection);
@@ -63,5 +64,11 @@ public class VRMenuSpawner : MonoBehaviour
         {
             menuCanvas.SetActive(menuVisible);
         }
+
+        // ✅ Clear ghost every time the menu button is pressed
+        FindObjectOfType<PrefabPlacer>()?.SetMenuOpen(menuVisible);
+
     }
+
+
 }
