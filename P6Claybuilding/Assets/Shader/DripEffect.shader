@@ -7,10 +7,11 @@
         _WaveSpeed ("Wave Speed", Range(0.1, 10)) = 3
         _FillAmount ("Fill Amount", Range(0, 1)) = 0
         _ObjectHeight ("Object Height", Float) = 1.0
+        _RippleStart ("Ripple Start", Range(0, 1)) = 0.2  // When ripple should start
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "Queue"="Geometry"}
+        Tags { "RenderType"="Opaque" "Queue"="Geometry" }
         Pass
         {
             Name "UniversalForward"
@@ -39,42 +40,31 @@
             float _WaveSpeed;
             float _FillAmount;
             float _ObjectHeight;
+            float _RippleStart;
 
             Varyings vert (Attributes IN)
             {
                 Varyings OUT;
-                
+                // Transform vertex to world space.
                 float3 worldPos = TransformObjectToWorld(IN.positionOS.xyz);
-                float fillHeight = _FillAmount * _ObjectHeight;
-
-                // ✅ Allow ripples at the bottom for 0.5s after filling
-                float bottomFactor = smoothstep(0.0, 0.5, 1.0 - _FillAmount); 
-
-                // ✅ Detect height to stop bottom ripple after filling
-                float heightFactor = smoothstep(fillHeight - 0.1, fillHeight + 0.3, worldPos.y);
-
-                // ✅ Only allow the bottom to ripple for a short time, then stop
-                float waveIntensity = heightFactor * bottomFactor; 
-
- // ✅ Only ripple if fill is NOT at 100%
-if (_FillAmount < 1.0)
-{
-    if (worldPos.y >= fillHeight)
-    {
-        float distanceToCenter = length(worldPos.xz);
-        float wave = sin(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
-                     cos(distanceToCenter * 8 + _Time.y * _WaveSpeed) * 
-                     _RippleStrength;
-
-        worldPos.y += wave; // ✅ Forces ripple movement
-    }
-}
-
-
+                // Compute a fixed threshold based on _RippleStart.
+                float rippleThreshold = _RippleStart * _ObjectHeight;
+                // Use step: if worldPos.y is above the threshold, then rippleClip is 1; otherwise, 0.
+                float rippleClip = step(rippleThreshold, worldPos.y);
+                
+                // If fill isn't complete and rippleClip is active, apply the ripple.
+                if (_FillAmount < 1.0 && rippleClip > 0.0)
+                {
+                    float distanceToCenter = length(worldPos.xz);
+                    float wave = sin(distanceToCenter * 8 + _Time.y * _WaveSpeed) *
+                                 cos(distanceToCenter * 8 + _Time.y * _WaveSpeed) *
+                                 _RippleStrength;
+                    worldPos.y += wave;
+                }
+                
                 OUT.positionCS = TransformWorldToHClip(worldPos);
                 OUT.uv = IN.uv;
                 OUT.worldPos = worldPos;
-
                 return OUT;
             }
 
