@@ -56,6 +56,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "LeftInteract",
+            "id": "a820cfbf-49f7-4825-9d4f-203fe4b06d95",
+            "actions": [
+                {
+                    "name": "New action",
+                    "type": "Button",
+                    "id": "02549e21-42fe-4612-b3d6-33cebb9c600d",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "2ed39659-9563-477a-93ef-33f2379b213d",
+                    "path": "<XRController>{LeftHand}/{PrimaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "New action",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []
