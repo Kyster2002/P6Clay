@@ -217,7 +217,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""63a29c89-2319-4ddf-a345-746814b57123"",
-                    ""path"": ""<XRController>{LeftHand}/{TriggerButton}"",
+                    ""path"": ""<XRController>{LeftHand}/{SecondaryTrigger}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",

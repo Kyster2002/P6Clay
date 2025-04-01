@@ -31,6 +31,9 @@ public class PrefabPlacer : MonoBehaviour
     private GameObject selectedWall;
     private Material originalWallMaterial;
 
+    [Header("Valid Placement Tags")]
+    public List<string> validSurfaceTags = new List<string>() { "Ground" }; // can edit in Inspector
+
 
     private void OnEnable()
     {
@@ -87,24 +90,54 @@ public class PrefabPlacer : MonoBehaviour
         if (prefab == null || rayOrigin == null) return;
 
         Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
-        if (!Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, placementLayers)) return;
+        if (!Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, placementLayers))
+        {
+            Debug.Log("No object hit by raycast.");
+            return;
+        }
 
-        Vector3 snappedPos = SnapToGrid(hit.point + Vector3.up * 0.01f);
+        // Allow placement only on tagged surfaces
+        string hitTag = hit.collider.transform.root.tag;
+        if (!validSurfaceTags.Contains(hitTag))
+        {
+            Debug.Log($"Hit tag '{hitTag}' not allowed.");
+            return;
+        }
 
+        // Now calculate snapped position relative to the surface
+        Vector3 snappedPos;
+
+        if (hit.collider.CompareTag("Ground"))
+        {
+            snappedPos = SnapToGrid(hit.point + Vector3.up * 0.01f); // flat grid on ground
+        }
+        else
+        {
+            snappedPos = GetSnapToSurfacePosition(hit, prefab); // edge snap for walls
+        }
+
+        Debug.Log($"Snapped ghost to {snappedPos} on hit '{hit.collider.name}'");
+
+        // CREATE or MOVE ghost
         if (ghostInstance == null || ghostInstance.name != prefab.name + "(Ghost)")
         {
             if (ghostInstance != null) Destroy(ghostInstance);
 
             ghostInstance = Instantiate(prefab, snappedPos, prefab.transform.rotation);
             ghostInstance.name = prefab.name + "(Ghost)";
+            SetLayerRecursively(ghostInstance, LayerMask.NameToLayer("Ignore Raycast")); // ✅ Add this
             DisableColliders(ghostInstance);
             ApplyGhostMaterial(ghostInstance);
+
         }
         else
         {
+            // ✅ This must run — or ghost stays in place forever!
             ghostInstance.transform.position = snappedPos;
         }
     }
+
+
 
     public void ClearGhost()
     {
@@ -136,17 +169,6 @@ public class PrefabPlacer : MonoBehaviour
             return;
         }
 
-        Debug.Log("Attempting to place at ghost position...");
-
-        // Test collider state
-        Collider[] ghostColliders = ghostInstance.GetComponentsInChildren<Collider>();
-        Debug.Log($"Ghost has {ghostColliders.Length} colliders");
-        foreach (Collider col in ghostColliders)
-        {
-            Debug.Log($"{col.name} collider enabled: {col.enabled}");
-        }
-
-        // Force destroy ghost before placing
         Vector3 pos = ghostInstance.transform.position;
         Quaternion rot = ghostInstance.transform.rotation;
 
@@ -154,6 +176,10 @@ public class PrefabPlacer : MonoBehaviour
         ghostInstance = null;
 
         GameObject placed = Instantiate(spawnerRef.selectedPrefab, pos, rot);
+
+        // ✅ Give it a tag that allows future placement on it
+        placed.tag = "Ground"; // or whatever tag you put in `validSurfaceTags`
+
         lastPlacedInstance = placed;
         placedObjects.Add(placed);
 
@@ -278,6 +304,60 @@ public class PrefabPlacer : MonoBehaviour
         {
             Debug.Log("No wall hit.");
         }
+    }
+
+    Bounds GetBounds(GameObject obj)
+    {
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) return new Bounds(obj.transform.position, Vector3.zero);
+
+        Bounds bounds = renderers[0].bounds;
+        foreach (Renderer r in renderers)
+        {
+            bounds.Encapsulate(r.bounds);
+        }
+        return bounds;
+    }
+
+    void SetLayerRecursively(GameObject obj, int layer)
+    {
+        obj.layer = layer;
+        foreach (Transform child in obj.transform)
+        {
+            SetLayerRecursively(child.gameObject, layer);
+        }
+    }
+
+
+    Vector3 GetSnapToSurfacePosition(RaycastHit hit, GameObject prefab)
+    {
+        Vector3 normal = hit.normal.normalized;
+        Vector3 axis = GetMajorAxis(normal);
+
+        Bounds prefabBounds = GetBounds(prefab);
+        float offset = Vector3.Scale(prefabBounds.extents, axis).magnitude;
+
+        Vector3 snapOffset = axis * offset;
+
+        Vector3 pivotOffset = prefabBounds.center - prefab.transform.position;
+
+        Vector3 snapped = hit.point + snapOffset - pivotOffset;
+
+        return snapped;
+    }
+
+
+
+    // Helper: get the dominant axis from the hit normal
+    Vector3 GetMajorAxis(Vector3 normal)
+    {
+        Vector3 abs = new Vector3(Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z));
+
+        if (abs.x > abs.y && abs.x > abs.z)
+            return new Vector3(Mathf.Sign(normal.x), 0, 0);
+        if (abs.y > abs.x && abs.y > abs.z)
+            return new Vector3(0, Mathf.Sign(normal.y), 0);
+        return new Vector3(0, 0, Mathf.Sign(normal.z));
     }
 
 }
