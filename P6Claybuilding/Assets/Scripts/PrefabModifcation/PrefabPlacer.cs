@@ -17,6 +17,7 @@ public class PrefabPlacer : MonoBehaviour
     public LayerMask placementLayers;
     public float gridSize = 0.5f;
     public Material ghostMaterial;
+    [SerializeField] float ghostSmoothSpeed = 15f; // tweakable in Inspector
 
     private GameObject ghostInstance;
     private GameObject lastPlacedInstance;
@@ -123,7 +124,8 @@ public class PrefabPlacer : MonoBehaviour
         {
             if (ghostInstance != null) Destroy(ghostInstance);
 
-            ghostInstance = Instantiate(prefab, snappedPos, prefab.transform.rotation);
+            Quaternion targetRotation = Quaternion.LookRotation(-hit.normal); // look away from surface
+            ghostInstance = Instantiate(prefab, snappedPos, targetRotation);
             ghostInstance.name = prefab.name + "(Ghost)";
             SetLayerRecursively(ghostInstance, LayerMask.NameToLayer("Ignore Raycast")); // ✅ Add this
             DisableColliders(ghostInstance);
@@ -133,7 +135,8 @@ public class PrefabPlacer : MonoBehaviour
         else
         {
             // ✅ This must run — or ghost stays in place forever!
-            ghostInstance.transform.position = snappedPos;
+            ghostInstance.transform.position = Vector3.Lerp(ghostInstance.transform.position, snappedPos, Time.deltaTime * ghostSmoothSpeed);
+
         }
     }
 
@@ -348,16 +351,18 @@ public class PrefabPlacer : MonoBehaviour
 
 
 
-    // Helper: get the dominant axis from the hit normal
     Vector3 GetMajorAxis(Vector3 normal)
     {
         Vector3 abs = new Vector3(Mathf.Abs(normal.x), Mathf.Abs(normal.y), Mathf.Abs(normal.z));
 
-        if (abs.x > abs.y && abs.x > abs.z)
+        float threshold = 0.5f; // ✅ tweak this! smaller = stricter, bigger = more forgiving
+
+        if (abs.x > threshold && abs.x >= abs.y && abs.x >= abs.z)
             return new Vector3(Mathf.Sign(normal.x), 0, 0);
-        if (abs.y > abs.x && abs.y > abs.z)
+        if (abs.y > threshold && abs.y >= abs.x && abs.y >= abs.z)
             return new Vector3(0, Mathf.Sign(normal.y), 0);
         return new Vector3(0, 0, Mathf.Sign(normal.z));
     }
+
 
 }
