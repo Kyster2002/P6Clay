@@ -3,7 +3,57 @@ guid: 0bb728832d335774eb6cd89bb6269559
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (1)
+    second: {fileID: 2100000, guid: d6be2d02b83e3db40983d3e490d1c5d3, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (10)
+    second: {fileID: 2100000, guid: c9e6f0e75fcac3b4e9d2634c109a8243, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (2)
+    second: {fileID: 2100000, guid: 16f9799b2b2e6564a86845da0464b68c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (3)
+    second: {fileID: 2100000, guid: a32e6a2eab2cb0f48b87c7b3cbea7fcb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (4)
+    second: {fileID: 2100000, guid: fbf77149bf744ab40a761e53a32ede8a, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (5)
+    second: {fileID: 2100000, guid: d8b3720ecb5f14b479078020840423b2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (6)
+    second: {fileID: 2100000, guid: db9c46e13affbd84b9f01a8882bc0e98, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (7)
+    second: {fileID: 2100000, guid: dd2535a2f4d503347911a336ddb15f91, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (8)
+    second: {fileID: 2100000, guid: 2b6000717533c12448b23cce0df0f5bc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Custom (9)
+    second: {fileID: 2100000, guid: ab7e2233f6046ab449c843028c11bf98, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
