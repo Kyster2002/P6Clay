@@ -4,13 +4,14 @@ using UnityEngine.InputSystem;
 public class VRMenuSpawner : MonoBehaviour
 {
     [Header("References")]
-    public Transform rightController; // The controller where the menu will spawn
-    public Transform headCamera; // XR Origin's main camera
-    public GameObject menuCanvas; // The world space UI canvas
-    public InputActionReference toggleMenuAction; // Input action to toggle visibility
+    public Transform rightController;
+    public Transform headCamera;
+    public GameObject menuCanvas;
+    public PrefabPlacer placer; // << Added this
+    public InputActionReference toggleMenuAction;
 
     [Header("Settings")]
-    public Vector3 offset = new Vector3(0, 0.1f, 0.2f); // Offset from the controller
+    public Vector3 offset = new Vector3(0, 0.1f, 0.2f);
     public float followSpeed = 10f;
 
     private bool menuVisible = false;
@@ -20,13 +21,11 @@ public class VRMenuSpawner : MonoBehaviour
         if (menuCanvas != null)
             menuCanvas.SetActive(false);
 
-        // Enable the action map if it's not managed by PlayerInput
         if (toggleMenuAction != null && !toggleMenuAction.action.actionMap.enabled)
         {
             toggleMenuAction.action.actionMap.Enable();
         }
     }
-
 
     void OnEnable()
     {
@@ -38,7 +37,6 @@ public class VRMenuSpawner : MonoBehaviour
     {
         if (toggleMenuAction != null)
             toggleMenuAction.action.performed -= ToggleMenu;
-
     }
 
     void Update()
@@ -46,13 +44,11 @@ public class VRMenuSpawner : MonoBehaviour
         if (!menuVisible || menuCanvas == null || rightController == null || headCamera == null)
             return;
 
-        // Follow position above controller
         Vector3 targetPosition = rightController.position + rightController.TransformDirection(offset);
         menuCanvas.transform.position = Vector3.Lerp(menuCanvas.transform.position, targetPosition, Time.deltaTime * followSpeed);
 
-        // Face the player’s head
         Vector3 lookDirection = menuCanvas.transform.position - headCamera.position;
-        lookDirection.y = 0; // Optional: Y-axis only
+        lookDirection.y = 0;
         menuCanvas.transform.rotation = Quaternion.LookRotation(lookDirection);
     }
 
@@ -65,10 +61,9 @@ public class VRMenuSpawner : MonoBehaviour
             menuCanvas.SetActive(menuVisible);
         }
 
-        // ✅ Clear ghost every time the menu button is pressed
-        FindObjectOfType<PrefabPlacer>()?.SetMenuOpen(menuVisible);
-
+        if (placer != null)
+        {
+            placer.SetMenuOpen(menuVisible); // << stable!
+        }
     }
-
-
 }

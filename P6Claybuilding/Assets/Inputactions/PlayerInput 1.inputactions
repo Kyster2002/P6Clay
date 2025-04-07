@@ -2,13 +2,49 @@
     "name": "PlayerInput 1",
     "maps": [
         {
-            "name": "Maptoggle",
+            "name": "Main",
             "id": "2f3eb0eb-9ec1-43f7-80f3-10747e17fc82",
             "actions": [
                 {
-                    "name": "B",
+                    "name": "MenuToggle",
                     "type": "Button",
                     "id": "222cbb9f-40e6-42bc-a710-38933a9a09a9",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "LeftSet",
+                    "type": "Button",
+                    "id": "b589aebe-b22a-4ddf-a7f1-cf8187dbc330",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "leftDelete",
+                    "type": "Button",
+                    "id": "6fc8cacb-08ce-4b97-bb07-f79ebd6cf660",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Rotate",
+                    "type": "Button",
+                    "id": "69071f48-1940-4c1b-8031-8a8b14d7b85f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Select",
+                    "type": "Button",
+                    "id": "5cb896b8-2a85-462d-9ffd-43a9571b9d89",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -23,119 +59,51 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "B",
+                    "action": "MenuToggle",
                     "isComposite": false,
                     "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "XRcontrols",
-            "id": "536c7b44-a66f-4d55-8518-ccfec8282933",
-            "actions": [
-                {
-                    "name": "Select button",
-                    "type": "Button",
-                    "id": "ba112abd-0a28-4859-ad3e-496fc520e94d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
+                },
                 {
                     "name": "",
-                    "id": "7a5c2648-db57-4d72-955e-deca2888f757",
-                    "path": "<XRController>{LeftHand}/{SecondaryTrigger}",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "Select button",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "LeftSet",
-            "id": "a820cfbf-49f7-4825-9d4f-203fe4b06d95",
-            "actions": [
-                {
-                    "name": "Set",
-                    "type": "Button",
-                    "id": "02549e21-42fe-4612-b3d6-33cebb9c600d",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "2ed39659-9563-477a-93ef-33f2379b213d",
+                    "id": "133372fe-f333-4c23-b5bd-382b1a1c53b5",
                     "path": "<XRController>{LeftHand}/{PrimaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Set",
+                    "action": "LeftSet",
                     "isComposite": false,
                     "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "LeftDelete",
-            "id": "6258f582-b1a5-4677-a487-98367463260d",
-            "actions": [
-                {
-                    "name": "New action",
-                    "type": "Button",
-                    "id": "8cf19d50-c9c9-4dcf-b4a1-6ed5952d089f",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
+                },
                 {
                     "name": "",
-                    "id": "baa87289-4c93-4f40-9165-4016250bd780",
+                    "id": "300e72da-c721-4949-99f1-c2a891e56f0a",
                     "path": "<XRController>{LeftHand}/{SecondaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "New action",
+                    "action": "leftDelete",
                     "isComposite": false,
                     "isPartOfComposite": false
-                }
-            ]
-        },
-        {
-            "name": "SelectWall",
-            "id": "e683e6e6-b172-4e89-a258-e848aa49cf06",
-            "actions": [
-                {
-                    "name": "WallSelection",
-                    "type": "Button",
-                    "id": "062871a4-57a3-4077-92d1-dc1e6b000049",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
+                },
                 {
                     "name": "",
-                    "id": "63a29c89-2319-4ddf-a345-746814b57123",
-                    "path": "<XRController>{LeftHand}/{SecondaryTrigger}",
+                    "id": "4db35b5f-c40c-4acc-87db-91c652240b0e",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "WallSelection",
+                    "action": "Rotate",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c57eaa93-30dd-4677-baec-ff01dec3b5a0",
+                    "path": "<XRController>{LeftHand}/{GripButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Select",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
