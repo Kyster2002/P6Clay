@@ -6,10 +6,10 @@ public class AutoSetupPrefab : MonoBehaviour
 {
     public Material defaultRippleMaterial;   // Default material for ripple effect
     public ParticleSystem particleSystemPrefab; // Prefab for the particle system
-    public Slider globalFillSlider; // ✅ Fill slider for scaling
+    public Slider globalFillSlider; // Fill slider for scaling
 
     [Header("Whitelist of Object Names to Apply Ripple To")]
-    public List<string> allowedNames = new List<string> { "Box" }; // ✅ Easily editable in Inspector
+    public List<string> allowedNames = new List<string> { "Box" }; // Easily editable in Inspector
 
     private List<GameObject> trackedObjects = new List<GameObject>(); // List of prefabs already configured
 
@@ -45,7 +45,6 @@ public class AutoSetupPrefab : MonoBehaviour
         }
     }
 
-
     void SetupPrefab(GameObject obj)
     {
         Debug.Log($"🛠 Configuring: {obj.name}");
@@ -57,12 +56,12 @@ public class AutoSetupPrefab : MonoBehaviour
             DripFillController dripFill = obj.GetComponent<DripFillController>() ?? obj.AddComponent<DripFillController>();
             WallFillSlider wallFill = obj.GetComponent<WallFillSlider>() ?? obj.AddComponent<WallFillSlider>();
 
-            // 🔵 Whitelist for naming check
+            // Whitelist for naming check.
             bool isBox = obj.name.Contains("Box") || firstRenderer.gameObject.name.Contains("Box");
 
             if (isBox)
             {
-                // 🔵 Handle multiple materials correctly
+                // Handle multiple materials correctly.
                 Material[] originalMaterials = firstRenderer.sharedMaterials; // Preserve all original materials
                 Material[] updatedMaterials = new Material[originalMaterials.Length];
 
@@ -72,7 +71,7 @@ public class AutoSetupPrefab : MonoBehaviour
                     {
                         Material newRippleMat = new Material(defaultRippleMaterial);
 
-                        // ✅ Copy color from original material
+                        // Copy color from the original material.
                         if (originalMaterials[i].HasProperty("_BaseColor") && newRippleMat.HasProperty("_BaseColor"))
                         {
                             newRippleMat.SetColor("_BaseColor", originalMaterials[i].GetColor("_BaseColor"));
@@ -80,30 +79,39 @@ public class AutoSetupPrefab : MonoBehaviour
 
                         updatedMaterials[i] = newRippleMat;
 
-                        dripFill.rippleMaterial = newRippleMat; // Save the ripple material
+                        dripFill.rippleMaterial = newRippleMat; // Save the ripple material.
                     }
                     else
                     {
-                        updatedMaterials[i] = originalMaterials[i]; // Copy untouched materials
+                        updatedMaterials[i] = originalMaterials[i]; // Copy untouched materials.
                     }
                 }
 
-                firstRenderer.materials = updatedMaterials; // Reapply materials array
+                firstRenderer.materials = updatedMaterials; // Reapply materials array.
             }
 
-            // 🔵 Assign Slider + DripFillController to WallFillSlider
+            // Assign global slider.
             if (globalFillSlider != null)
             {
                 wallFill.fillSlider = globalFillSlider;
                 wallFill.selectedDripFillController = dripFill;
-
             }
             else
             {
                 Debug.LogWarning("⚠ Global Fill Slider not assigned in AutoSetupPrefab!");
             }
 
+            // Setup the particle system on this prefab.
             SetupParticleSystem(obj, dripFill);
+
+            // ================================
+            // INSERT THE CONFIGURATION SNIPPET HERE:
+            DripFillController dfc = obj.GetComponent<DripFillController>();
+            if (dfc != null)
+            {
+                dfc.ConfigureDripParticleController();
+            }
+            // ================================
         }
         else
         {
@@ -112,9 +120,6 @@ public class AutoSetupPrefab : MonoBehaviour
 
         Debug.Log($"✔ {obj.name} - Fully Configured.");
     }
-
-
-
 
     void SetupParticleSystem(GameObject obj, DripFillController dripFill)
     {
@@ -130,14 +135,14 @@ public class AutoSetupPrefab : MonoBehaviour
             return;
         }
 
-        // 🔥 Place the particle system on top of the Box child if possible
+        // Place the particle system on top of the Box child if possible.
         Transform boxTransform = FindDeepChild(obj.transform, "Box");
         if (boxTransform != null)
         {
             ParticleSystem newParticles = Instantiate(particleSystemPrefab, boxTransform);
-            newParticles.transform.localPosition = new Vector3(0, 0.5f, 0); // ⚡ You can tweak this offset
+            newParticles.transform.localPosition = new Vector3(0, 0.5f, 0); // Tweak offset as needed.
             newParticles.transform.localRotation = Quaternion.identity;
-            newParticles.transform.localScale = Vector3.one; // No weird scaling
+            newParticles.transform.localScale = Vector3.one; // Ensure no unwanted scaling.
 
             dripFill.dripParticles = newParticles;
             newParticles.gameObject.SetActive(false);
@@ -150,12 +155,12 @@ public class AutoSetupPrefab : MonoBehaviour
         }
     }
 
-    // Helper method (reuse from DripFillController)
+    // Helper method to find a child recursively.
     Transform FindDeepChild(Transform parent, string name)
     {
         foreach (Transform child in parent)
         {
-            if (child.name == name)
+            if (child.name.Contains(name))
                 return child;
             Transform result = FindDeepChild(child, name);
             if (result != null)
@@ -163,5 +168,4 @@ public class AutoSetupPrefab : MonoBehaviour
         }
         return null;
     }
-
 }

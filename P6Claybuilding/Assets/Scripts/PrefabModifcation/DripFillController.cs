@@ -150,6 +150,17 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     }
 
 
+    public void ConfigureDripParticleController()
+    {
+        if (dripParticles != null)
+        {
+            DripParticleController pCtrl = dripParticles.GetComponent<DripParticleController>();
+            if (pCtrl != null && boxTransform != null)
+            {
+                pCtrl.Setup(boxTransform);
+            }
+        }
+    }
 
 
 

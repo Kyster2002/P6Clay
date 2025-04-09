@@ -57,22 +57,6 @@ public class DripParticleController : MonoBehaviour
         }
     }
 
-    // Add this method anywhere inside DripFillController (e.g., at the bottom of the class).
-    public void ConfigureDripParticleController()
-    {
-        // Make sure we actually have a particle system assigned.
-        if (dripParticles == null)
-            return;
-
-        // Get the DripParticleController component from the particle system.
-        DripParticleController pCtrl = dripParticles.GetComponent<DripParticleController>();
-        if (pCtrl != null && boxTransform != null)
-        {
-            // Pass the "Box" transform so the shape can be scaled/positioned.
-            pCtrl.Setup(boxTransform);
-        }
-    }
-
 
     /// <summary>
     /// Adjusts the Shape module's scale so that it exactly matches the target object's bounding
