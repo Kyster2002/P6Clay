@@ -797,7 +797,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 398447092}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1281188851}
+        m_TargetAssemblyTypeName: WallFillSlider, Assembly-CSharp
+        m_MethodName: StartDripFill
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &398447092
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1773,7 +1785,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 814946948}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1281188851}
+        m_TargetAssemblyTypeName: WallFillSlider, Assembly-CSharp
+        m_MethodName: StartSmoothFill
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &814946948
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1826,6 +1850,7 @@ GameObject:
   - component: {fileID: 849155459}
   - component: {fileID: 849155458}
   - component: {fileID: 849155460}
+  - component: {fileID: 849155462}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -1989,6 +2014,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   highlightColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  wallFillSlider: {fileID: 1281188851}
   validSurfaceTags:
   - Walls
   - Ground
@@ -2001,6 +2027,25 @@ MonoBehaviour:
   menuSpawnerRef: {fileID: 849155459}
   prefabMenu: {fileID: 223898805}
   animationMenu: {fileID: 200615526}
+--- !u!114 &849155462
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 849155453}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 200b6f2bc98d60643a6fcfd95f8fd73d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultRippleMaterial: {fileID: 2100000, guid: 36f8f0d9626d73a43a2cbfa07a2fa941,
+    type: 2}
+  particleSystemPrefab: {fileID: 8930090092854196413, guid: 597234af483753e43bcfa16e937f6993,
+    type: 3}
+  globalFillSlider: {fileID: 1281188850}
+  allowedNames:
+  - Box
 --- !u!1 &876859573
 GameObject:
   m_ObjectHideFlags: 0
@@ -2335,6 +2380,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1281188849}
   - component: {fileID: 1281188850}
+  - component: {fileID: 1281188851}
   m_Layer: 5
   m_Name: Slider
   m_TagString: Untagged
@@ -2414,7 +2460,33 @@ MonoBehaviour:
   m_Value: 0
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1281188851}
+        m_TargetAssemblyTypeName: WallFillSlider, Assembly-CSharp
+        m_MethodName: UpdateFillAmount
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+--- !u!114 &1281188851
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1281188848}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b7e9e7765dab764d9cf74daf46ac2a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fillSlider: {fileID: 1281188850}
+  selectedDripFillController: {fileID: 0}
 --- !u!1 &1317470429
 GameObject:
   m_ObjectHideFlags: 0
@@ -2640,6 +2712,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1767192439, guid: f6336ac4ac8b4d34bc5072418cdc62a0, type: 3}
+      propertyPath: orthographic
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1717954561962503725, guid: f6336ac4ac8b4d34bc5072418cdc62a0,
         type: 3}
       propertyPath: m_Name

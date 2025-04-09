@@ -11,13 +11,14 @@ GameObject:
   - component: {fileID: 1330901974951905140}
   - component: {fileID: 8930090092854196413}
   - component: {fileID: 7234413123171009528}
+  - component: {fileID: 2421851822918403303}
   m_Layer: 0
   m_Name: Particle System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1330901974951905140
 Transform:
   m_ObjectHideFlags: 0
@@ -4833,3 +4834,20 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &2421851822918403303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1617717875446903860}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caf643a6c39f95641b66c3c70fe644a0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  fillSpeed: 0.2
+  dripParticles: {fileID: 8930090092854196413}
+  rippleMaterial: {fileID: 0}
+  originalMaterial: {fileID: 0}
+  particleYOffset: 1

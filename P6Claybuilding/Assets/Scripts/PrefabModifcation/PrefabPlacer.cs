@@ -11,6 +11,7 @@ public class PrefabPlacer : MonoBehaviour
     public Transform rayOrigin; // e.g., Left Controller
     public PrefabButtonSpawner spawnerRef; // Assigned in inspector
 
+
     [Header("Input")]
     public InputActionReference placeAction; // Left trigger
     public InputActionReference undoAction;  // Left secondary button
@@ -31,7 +32,7 @@ public class PrefabPlacer : MonoBehaviour
     public InputActionReference highlightAction;   // -> Drag "Select" action here
     public LayerMask wallLayer;
     public Color highlightColor = Color.yellow;
-
+    public WallFillSlider wallFillSlider;
 
     private GameObject selectedWall;
     private Material originalWallMaterial;
@@ -57,7 +58,8 @@ public class PrefabPlacer : MonoBehaviour
     [Header("Menu References")]
     public GameObject prefabMenu;      // Drag your PrefabMenu here
     public GameObject animationMenu;   // Drag your AnimationMenu here
-
+    private Dictionary<Renderer, Material[]> originalWallMaterials = new Dictionary<Renderer, Material[]>();
+    private Dictionary<Renderer, Color[]> originalWallColors = new Dictionary<Renderer, Color[]>();
 
     private void OnEnable()
     {
@@ -244,7 +246,189 @@ public class PrefabPlacer : MonoBehaviour
         }
     }
 
+    void OnHighlightWall(InputAction.CallbackContext ctx)
+    {
+        if (!ctx.performed)
+            return; // Only react when the button is actually pressed
 
+        Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
+        Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.yellow, 2f);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, wallLayer))
+        {
+            Transform root = hit.collider.transform.root;
+            GameObject wall = root.gameObject;
+            Debug.Log("🎯 Hit object: " + hit.collider.gameObject.name);
+            Debug.Log("📦 Root object: " + root.name);
+            Debug.Log("🏰 Wall hit: " + wall.name);
+
+            // If the same wall is selected again, deselect it.
+            if (selectedWall == wall)
+            {
+                Debug.Log("🔄 Same wall selected again, deselecting.");
+                DeselectWall();
+                return;
+            }
+
+            // Check that the wall is on the "Walls" layer.
+            if (wall.layer == LayerMask.NameToLayer("Walls"))
+            {
+                Debug.Log("✅ Wall is on 'Walls' layer, ready for animation.");
+
+                // Always deselect any previously selected wall.
+                DeselectWall();
+
+                selectedWall = wall;
+                Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
+
+                if (renderers.Length == 0)
+                {
+                    Debug.LogWarning("⚠️ No renderers found on selected wall.");
+                    return;
+                }
+
+                // Clear and save original color values for every Renderer.
+                originalWallColors.Clear();
+                foreach (Renderer rend in renderers)
+                {
+                    Color[] savedColors = new Color[rend.materials.Length];
+                    for (int i = 0; i < rend.materials.Length; i++)
+                    {
+                        // If the material has _BaseColor, use that; otherwise, use its color property.
+                        if (rend.materials[i].HasProperty("_BaseColor"))
+                            savedColors[i] = rend.materials[i].GetColor("_BaseColor");
+                        else
+                            savedColors[i] = rend.materials[i].color;
+                    }
+                    originalWallColors[rend] = savedColors;
+                }
+
+                // Now modify the existing material instances to show the highlight color.
+                foreach (Renderer rend in renderers)
+                {
+                    for (int i = 0; i < rend.materials.Length; i++)
+                    {
+                        if (rend.materials[i].HasProperty("_BaseColor"))
+                            rend.materials[i].SetColor("_BaseColor", highlightColor);
+                        else
+                            rend.materials[i].color = highlightColor;
+                    }
+                }
+
+                // Assign DripFillController to WallFillSlider
+                DripFillController dripFill = selectedWall.GetComponent<DripFillController>();
+                if (wallFillSlider != null)
+                {
+                    wallFillSlider.SetDripFillController(dripFill);
+                }
+                else
+                {
+                    Debug.LogWarning("⚠️ No WallFillSlider assigned in PrefabPlacer!");
+                }
+
+                // Hide the ghost while the wall is selected and animating
+                if (ghostInstance != null)
+                    ghostInstance.SetActive(false);
+
+                prefabMenu.SetActive(false);
+                animationMenu.SetActive(true);
+            }
+            else
+            {
+                Debug.LogWarning("❌ Wall is NOT on 'Walls' layer. No animation menu shown.");
+            }
+        }
+        else
+        {
+            Debug.Log("🚫 No wall hit. Deselecting any selected wall.");
+            DeselectWall();
+        }
+    }
+    private void DeselectWall()
+    {
+        if (selectedWall != null)
+        {
+            // Restore the original colors on all renderers.
+            foreach (var pair in originalWallColors)
+            {
+                Renderer rend = pair.Key;
+                Color[] origColors = pair.Value;
+                if (rend == null) continue;
+
+                Material[] mats = rend.materials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    if (mats[i].HasProperty("_BaseColor"))
+                        mats[i].SetColor("_BaseColor", origColors[i]);
+                    else
+                        mats[i].color = origColors[i];
+                }
+            }
+            Debug.Log("🔄 All original materials restored after deselection.");
+        }
+
+        selectedWall = null;
+        originalWallColors.Clear();
+        SetupWallForFillSlider(selectedWall);
+
+        // Restore ghost visibility
+        if (ghostInstance != null)
+            ghostInstance.SetActive(true);
+
+        prefabMenu.SetActive(true);
+        animationMenu.SetActive(false);
+    }
+
+
+    void SetupWallForFillSlider(GameObject wall)
+    {
+        if (wall == null || wallFillSlider == null) return;
+
+        DripFillController drip = wall.GetComponentInChildren<DripFillController>();
+        if (drip != null)
+        {
+            wallFillSlider.SetDripFillController(drip);
+            Debug.Log("🔗 WallFillSlider updated to control new selected wall.");
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Selected wall has no DripFillController!");
+        }
+    }
+
+    public void RestartSelectedWallDrip()
+    {
+        if (selectedWall != null)
+        {
+            DripFillController drip = selectedWall.GetComponentInChildren<DripFillController>();
+            if (drip != null)
+            {
+                drip.ResetDripEffect();
+                Debug.Log("🔄 Restarted drip animation on selected wall.");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No DripFillController found on selected wall.");
+            }
+        }
+    }
+
+    public void StartFillAnimationOnSelectedWall()
+    {
+        if (selectedWall != null)
+        {
+            DripFillController drip = selectedWall.GetComponentInChildren<DripFillController>();
+            if (drip != null)
+            {
+                drip.StartSmoothFillWithoutDrip();
+                Debug.Log("⏳ Started smooth fill (no drip).");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No DripFillController found on selected wall.");
+            }
+        }
+    }
 
     void TryPlace()
     {
@@ -254,21 +438,28 @@ public class PrefabPlacer : MonoBehaviour
         Vector3 finalPos = ghostInstance.transform.position;
         Quaternion finalRot = ghostInstance.transform.rotation;
 
-        // 🛡️ Snap final position to grid
-        finalPos = SnapToGrid(finalPos); // << ADD THIS
+        finalPos = SnapToGrid(finalPos);
 
         Destroy(ghostInstance);
         ghostInstance = null;
 
-        // Instantiate the placed object with the corrected final position
         GameObject placed = Instantiate(spawnerRef.selectedPrefab, finalPos, finalRot);
-        placed.tag = "Ground"; // or whatever valid surface tag
+        placed.tag = "Ground";
 
         lastPlacedInstance = placed;
         placedObjects.Add(placed);
 
-        manualRotation = finalRot; // Keep rotation
+        manualRotation = finalRot;
+
+        // Call OnPlaced to disable particle system after placement
+        DripFillController controller = placed.GetComponent<DripFillController>();
+        if (controller != null)
+        {
+            controller.OnPlaced();
+        }
     }
+
+
 
 
     void OnUndo(InputAction.CallbackContext context)
@@ -339,96 +530,6 @@ public class PrefabPlacer : MonoBehaviour
             if (visualRay != null)
                 visualRay.enabled = false; // << ADD THIS
         }
-    }
-
-    void OnHighlightWall(InputAction.CallbackContext ctx)
-    {
-        if (!ctx.performed)
-            return; // Only react when button is actually pressed
-
-        Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
-        Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.yellow, 2f);
-
-        // Check if the ray hits something in wallLayer
-        if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, wallLayer))
-        {
-            Transform root = hit.collider.transform.root;
-            GameObject wall = root.gameObject;
-            Debug.Log("🎯 Hit object: " + hit.collider.gameObject.name);
-            Debug.Log("📦 Root object: " + root.name);
-            Debug.Log("🏰 Wall hit: " + wall.name);
-
-            // If the object hit is already the selected one → Deselect it
-            if (selectedWall == wall)
-            {
-                Debug.Log("🔄 Same wall selected again, deselecting.");
-                DeselectWall();
-                return;
-            }
-
-            // Otherwise, select the new wall
-            if (wall.layer == LayerMask.NameToLayer("Walls"))
-            {
-                Debug.Log("✅ Wall is on 'Walls' layer, ready for animation.");
-
-                // Clear previous selection first
-                DeselectWall();
-
-                // Highlight new wall
-                Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
-                if (renderers.Length == 0)
-                {
-                    Debug.LogWarning("⚠️ No renderers found on selected wall.");
-                    return;
-                }
-
-                selectedWall = wall;
-                originalWallMaterial = renderers[0].material;
-
-                foreach (Renderer rend in renderers)
-                {
-                    Material highlightMat = new Material(rend.material);
-                    highlightMat.color = highlightColor;
-                    rend.material = highlightMat;
-
-                    Debug.Log($"✨ Renderer {rend.name}: Material changed to highlight color.");
-                }
-
-                // Switch to animation menu
-                prefabMenu.SetActive(false);
-                animationMenu.SetActive(true);
-            }
-            else
-            {
-                Debug.LogWarning("❌ Wall is NOT on 'Walls' layer. No animation menu shown.");
-            }
-        }
-        else
-        {
-            Debug.Log("🚫 No wall hit. Deselecting any selected wall.");
-            // Nothing hit -> deselect
-            DeselectWall();
-        }
-    }
-
-    private void DeselectWall()
-    {
-        if (selectedWall != null && originalWallMaterial != null)
-        {
-            Renderer[] prevRenderers = selectedWall.GetComponentsInChildren<Renderer>();
-            foreach (Renderer r in prevRenderers)
-            {
-                r.material = originalWallMaterial;
-            }
-            Debug.Log("🔄 Previous wall material restored after deselection.");
-        }
-
-        selectedWall = null;
-        originalWallMaterial = null;
-
-        // Switch back to prefab menu
-        prefabMenu.SetActive(true);
-        animationMenu.SetActive(false);
     }
 
 
