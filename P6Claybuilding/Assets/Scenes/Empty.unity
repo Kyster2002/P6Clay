@@ -465,11 +465,7 @@ Transform:
   m_GameObject: {fileID: 9838752}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-<<<<<<< Updated upstream
   m_LocalPosition: {x: 42.36, y: -0.13199615, z: -46.09427}
-=======
-  m_LocalPosition: {x: -1.4087372, y: 10.368004, z: -44.04225}
->>>>>>> Stashed changes
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1248,11 +1244,7 @@ Transform:
   m_GameObject: {fileID: 118664048}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-<<<<<<< Updated upstream
   m_LocalPosition: {x: 1, y: 0, z: 0}
-=======
-  m_LocalPosition: {x: -43.768738, y: 10.5, z: 2.0520172}
->>>>>>> Stashed changes
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2025,11 +2017,7 @@ Transform:
   m_GameObject: {fileID: 640989951}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-<<<<<<< Updated upstream
   m_LocalPosition: {x: 85.693115, y: 0, z: 0}
-=======
-  m_LocalPosition: {x: 41.924377, y: 10.5, z: 2.0520172}
->>>>>>> Stashed changes
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2423,6 +2411,7 @@ GameObject:
   m_Component:
   - component: {fileID: 686289808}
   - component: {fileID: 686289807}
+  - component: {fileID: 686289809}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -2510,6 +2499,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &686289809
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 686289806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &700827866
 GameObject:
   m_ObjectHideFlags: 0
@@ -2856,11 +2868,7 @@ Transform:
   m_GameObject: {fileID: 700827866}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-<<<<<<< Updated upstream
   m_LocalPosition: {x: 42.36, y: -0.13199615, z: 43.49216}
-=======
-  m_LocalPosition: {x: -1.4087372, y: 10.368004, z: 45.544178}
->>>>>>> Stashed changes
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4554,17 +4562,17 @@ PrefabInstance:
     - target: {fileID: 7259367742038706979, guid: ca4cc2a89c25a6e43a03304f3269847d,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 136.7
       objectReference: {fileID: 0}
     - target: {fileID: 7259367742038706979, guid: ca4cc2a89c25a6e43a03304f3269847d,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 78
       objectReference: {fileID: 0}
     - target: {fileID: 7259367742038706979, guid: ca4cc2a89c25a6e43a03304f3269847d,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 67.3
       objectReference: {fileID: 0}
     - target: {fileID: 7259367742038706979, guid: ca4cc2a89c25a6e43a03304f3269847d,
         type: 3}
@@ -5340,11 +5348,7 @@ Transform:
   m_GameObject: {fileID: 1709053919}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-<<<<<<< Updated upstream
   m_LocalPosition: {x: 65.86, y: -10.5, z: 5.0431633}
-=======
-  m_LocalPosition: {x: 22.091263, y: 0, z: 7.0951805}
->>>>>>> Stashed changes
   m_LocalScale: {x: 2.6764789, y: 2.6764789, z: 2.6764789}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5717,20 +5721,12 @@ PrefabInstance:
     - target: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0,
         type: 3}
       propertyPath: m_LocalPosition.x
-<<<<<<< Updated upstream
       value: 49
-=======
-      value: 0
->>>>>>> Stashed changes
       objectReference: {fileID: 0}
     - target: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0,
         type: 3}
       propertyPath: m_LocalPosition.y
-<<<<<<< Updated upstream
       value: 38.63856
-=======
-      value: 4.8
->>>>>>> Stashed changes
       objectReference: {fileID: 0}
     - target: {fileID: 1717954561962503726, guid: f6336ac4ac8b4d34bc5072418cdc62a0,
         type: 3}
@@ -6639,18 +6635,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 686289808}
   - {fileID: 1646371260}
-<<<<<<< Updated upstream
   - {fileID: 409479781}
   - {fileID: 22770211}
   - {fileID: 1708672923}
   - {fileID: 1842796035}
-=======
-  - {fileID: 22770211}
-  - {fileID: 1708672923}
-  - {fileID: 1842796035}
-  - {fileID: 1709053925}
-  - {fileID: 640989957}
-  - {fileID: 118664054}
-  - {fileID: 9838758}
-  - {fileID: 700827872}
->>>>>>> Stashed changes
