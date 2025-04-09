@@ -9,25 +9,14 @@ EditorUserSettings:
       value: 18134705175a055722080a3115371d4a0d55006876786860616b0471b8b07a68ffab74f9ee2a3a30300cea1a11320d0beb1a0c25f7060f494b4cc80018eb09361fc211cb1f862d19c51d19dcc413d6ade0d8ddfcddf9f4d9d29195fcfde6ebeae6f0a9c9afa6f8c5b89ff7a1aacececac4eba4d7c9d28bda
       flags: 0
     RecentlyUsedSceneGuid-0:
-<<<<<<< Updated upstream
       value: 0209560451565d5e55595e2345730d44124f1e73787871612e7d4d36b2e23239
       flags: 0
     RecentlyUsedSceneGuid-1:
       value: 5105045f5406510f5d580973127b5c44134e192c747073337b7a4c65e6b1303c
-=======
-      value: 015203505451505a55580e7143760a44104f4d2c287977322f781b6bb5e2356b
-      flags: 0
-    RecentlyUsedSceneGuid-1:
-      value: 060903005203500c5d0d5f7011705a4442151e7e7c7d70322e7f4d63b3b7666b
-      flags: 0
-    RecentlyUsedSceneGuid-2:
-      value: 5b5450540605080b0e58592746710844104e4a7a2e7976352e2f186be7b96360
->>>>>>> Stashed changes
       flags: 0
     RecentlyUsedSceneGuid-2:
       value: 52025250030d5e0b5e585570462506441715487e7d7f25317c2b4e62b5b2613b
       flags: 0
-<<<<<<< Updated upstream
     RecentlyUsedSceneGuid-3:
       value: 52545600530c080d0b58597542750c44104e4a2c7a7b2066757a1f30e0e36d3e
       flags: 0
@@ -41,20 +30,13 @@ EditorUserSettings:
       value: 060903005203500c5d0d5f7011705a4442151e7e7c7d70322e7f4d63b3b7666b
       flags: 0
     RecentlyUsedSceneGuid-7:
-      value: 5004025e5301595a545b5f2646750b444715197a2f7075617d7b4962e4b86c6a
+      value: 51520d0252040b0a58580e271675074440154e282d7022642f7b1b63b3e6376a
       flags: 0
     RecentlyUsedSceneGuid-8:
-      value: 51520d0252040b0a58580e271675074440154e282d7022642f7b1b63b3e6376a
+      value: 5004025e5301595a545b5f2646750b444715197a2f7075617d7b4962e4b86c6a
       flags: 0
     RecentlyUsedSceneGuid-9:
       value: 0001525e55530d080e575e7415720f444f4f1c737d7827602c2d4867e6b86560
-=======
-    RecentlyUsedSceneGuid-4:
-      value: 5004025e5301595a545b5f2646750b444715197a2f7075617d7b4962e4b86c6a
-      flags: 0
-    RecentlyUsedSceneGuid-5:
-      value: 5105045f5406510f5d580973127b5c44134e192c747073337b7a4c65e6b1303c
->>>>>>> Stashed changes
       flags: 0
     lightmappingBakingProfile:
       value: 51
