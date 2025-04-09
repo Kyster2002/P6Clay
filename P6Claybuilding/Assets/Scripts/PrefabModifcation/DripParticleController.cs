@@ -3,33 +3,29 @@ using UnityEngine;
 [RequireComponent(typeof(ParticleSystem))]
 public class DripParticleController : MonoBehaviour
 {
-    private ParticleSystem particleSystem;
-    private Transform targetObject; // What we're dripping onto
+    private ParticleSystem particleSystemComponent;
+    private Transform targetObject;
     private ParticleSystem.MainModule mainModule;
 
     [Header("Drip Settings")]
-    public float sizeMultiplier = 0.05f; // How big droplets are relative to object width
-    public float speedMultiplier = 0.5f; // How fast droplets fall
-    public float gravityMultiplier = 1.5f; // Heavier or lighter feel
-    public float offsetAboveObject = 0.1f; // How far above object to hover
+    public float offsetAboveObject = 0.1f;
 
     void Awake()
     {
-        particleSystem = GetComponent<ParticleSystem>();
-        mainModule = particleSystem.main;
+        particleSystemComponent = GetComponent<ParticleSystem>();
+        mainModule = particleSystemComponent.main;
     }
 
     public void Setup(Transform target)
     {
         targetObject = target;
-        AdjustParticles();
+        AdjustShape();
     }
 
     void Update()
     {
         if (targetObject != null)
         {
-            // Keep particle system above the object
             Renderer rend = targetObject.GetComponent<Renderer>();
             if (rend != null)
             {
@@ -39,33 +35,21 @@ public class DripParticleController : MonoBehaviour
         }
     }
 
-    void AdjustParticles()
+    void AdjustShape()
     {
         if (targetObject == null) return;
 
         Renderer rend = targetObject.GetComponent<Renderer>();
         if (rend == null) return;
 
-        float width = rend.bounds.size.x;
-        float depth = rend.bounds.size.z;
-        float minSize = Mathf.Min(width, depth);
+        var shape = particleSystemComponent.shape;
+        shape.shapeType = ParticleSystemShapeType.Box;
 
-        // IMPORTANT: Temporarily stop the system from playing while adjusting
-        bool wasPlaying = particleSystem.isPlaying;
-        particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-
-        // Adjust particle size based on object width/depth
-        mainModule.startSize = minSize * sizeMultiplier;
-
-        // Adjust speed and gravity
-        mainModule.startSpeed = mainModule.startSpeed.constant * speedMultiplier;
-        mainModule.gravityModifier = gravityMultiplier;
-
-        // Restore play state (only if it was already playing)
-        if (wasPlaying)
-        {
-            particleSystem.Play();
-        }
+        // Set the box scale to match the target's X and Z, Y stays 0.5
+        shape.scale = new Vector3(
+            rend.bounds.size.x,
+            0.5f,                  // Fixed Y scale
+            rend.bounds.size.z
+        );
     }
-
 }
