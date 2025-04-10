@@ -7,21 +7,34 @@ using System.Collections;
 
 public class PrefabPlacer : MonoBehaviour
 {
-    [Header("References")]
-    public Transform rayOrigin; // e.g., Left Controller
-    public PrefabButtonSpawner spawnerRef; // Assigned in inspector
 
+
+    [Header("Valid Placement Tags")]
+    public List<string> validSurfaceTags = new List<string>() { "Ground" };
+
+    [Header("Highlight Settings")]
+
+    private float highlightDuration = 2f; // Duration of highlight fade in/out
+    private Coroutine highlightFadeCoroutine;
+    private List<GameObject> currentCornerHighlights = new List<GameObject>();
+
+    [Header("References")]
+    public Transform rayOrigin;
+    public PrefabButtonSpawner spawnerRef;
+    public WallFillSlider wallFillSlider;
 
     [Header("Input")]
-    public InputActionReference placeAction; // Left trigger
-    public InputActionReference undoAction;  // Left secondary button
+    public InputActionReference placeAction;
+    public InputActionReference undoAction;
+    public InputActionReference rotateAction;
+    public InputActionReference highlightAction;
 
     [Header("Placement Settings")]
     public float maxRayDistance = 100f;
     public LayerMask placementLayers;
     public float gridSize = 0.5f;
     public Material ghostMaterial;
-    [SerializeField] float ghostSmoothSpeed = 15f; // tweakable in Inspector
+    [SerializeField] float ghostSmoothSpeed = 15f;
 
     private GameObject ghostInstance;
     private GameObject lastPlacedInstance;
@@ -29,22 +42,22 @@ public class PrefabPlacer : MonoBehaviour
     private List<GameObject> placedObjects = new List<GameObject>();
 
     [Header("Wall Selection")]
-    public InputActionReference highlightAction;   // -> Drag "Select" action here
     public LayerMask wallLayer;
     public Color highlightColor = Color.yellow;
-    public WallFillSlider wallFillSlider;
 
     private GameObject selectedWall;
-    private Material originalWallMaterial;
+    private Dictionary<Renderer, Material[]> originalWallMaterials = new Dictionary<Renderer, Material[]>();
+    private Dictionary<Renderer, Color[]> originalWallColors = new Dictionary<Renderer, Color[]>();
 
-    [Header("Valid Placement Tags")]
-    public List<string> validSurfaceTags = new List<string>() { "Ground" }; // can edit in Inspector
+
+    [Header("Menu References")]
+    public GameObject prefabMenu;
+    public GameObject animationMenu;
+    public VRMenuSpawner menuSpawnerRef;
 
     [Header("Rotation Control")]
-    public InputActionReference rotateAction; // assign a trigger or grip in Inspector
-    public float rotateSpeed = 90f; // degrees per second
+    public float rotateSpeed = 90f;
     public float faceBias = 0.005f;
-
     private float rotationHoldTime = 0.5f;
     private float rotateTimer = 0f;
     private bool hasLaidDown = false;
@@ -53,15 +66,10 @@ public class PrefabPlacer : MonoBehaviour
     [Header("Visual Ray")]
     public LineRenderer visualRay;
     public float rayLength = 10f;
-    public VRMenuSpawner menuSpawnerRef; // << ✅ ADD THIS
 
-    [Header("Menu References")]
-    public GameObject prefabMenu;      // Drag your PrefabMenu here
-    public GameObject animationMenu;   // Drag your AnimationMenu here
-    private Dictionary<Renderer, Material[]> originalWallMaterials = new Dictionary<Renderer, Material[]>();
-    private Dictionary<Renderer, Color[]> originalWallColors = new Dictionary<Renderer, Color[]>();
 
-    private void OnEnable()
+
+private void OnEnable()
     {
 
         placeAction.action.performed += OnPlace;
@@ -246,10 +254,110 @@ public class PrefabPlacer : MonoBehaviour
         }
     }
 
+    private IEnumerator FlashHighlight(GameObject wall)
+    {
+        if (wall == null) yield break;
+
+        Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) yield break;
+
+        float elapsed = 0f;
+        float halfDuration = highlightDuration / 2f;
+
+        // First half: Fade in
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / halfDuration);
+
+            foreach (Renderer rend in renderers)
+            {
+                if (!originalWallColors.ContainsKey(rend)) continue;
+
+                Color[] originalColors = originalWallColors[rend];
+                for (int i = 0; i < rend.materials.Length; i++)
+                {
+                    Color fromColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
+                    Color toColor = highlightColor;
+                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
+
+                    if (rend.materials[i].HasProperty("_BaseColor"))
+                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
+                    else
+                        rend.materials[i].color = lerpedColor;
+                }
+            }
+
+            yield return null;
+        }
+
+        elapsed = 0f;
+
+        // Second half: Fade out
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / halfDuration);
+
+            foreach (Renderer rend in renderers)
+            {
+                if (!originalWallColors.ContainsKey(rend)) continue;
+
+                Color[] originalColors = originalWallColors[rend];
+                for (int i = 0; i < rend.materials.Length; i++)
+                {
+                    Color fromColor = highlightColor;
+                    Color toColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
+                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
+
+                    if (rend.materials[i].HasProperty("_BaseColor"))
+                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
+                    else
+                        rend.materials[i].color = lerpedColor;
+                }
+            }
+
+            yield return null;
+        }
+
+        highlightFadeCoroutine = null; // Clear coroutine reference when done
+    }
+
+    void CreateCornerHighlights(GameObject wall)
+    {
+        if (wall == null) return;
+
+        // 1. Get the original (non-scaled) bounds
+        Bounds bounds = GetBounds(wall);
+
+        // 2. Define the 4 corner positions
+        Vector3[] corners = new Vector3[4];
+        corners[0] = new Vector3(bounds.min.x, bounds.center.y, bounds.min.z); // Bottom Left
+        corners[1] = new Vector3(bounds.max.x, bounds.center.y, bounds.min.z); // Bottom Right
+        corners[2] = new Vector3(bounds.min.x, bounds.center.y, bounds.max.z); // Top Left
+        corners[3] = new Vector3(bounds.max.x, bounds.center.y, bounds.max.z); // Top Right
+
+        // 3. Create thin vertical cylinders at each corner
+        foreach (Vector3 corner in corners)
+        {
+            GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            pillar.transform.SetParent(wall.transform);
+            pillar.transform.position = corner;
+            pillar.transform.localScale = new Vector3(0.02f, bounds.size.y * 0.5f, 0.02f); // Thin and tall (half height up/down)
+            pillar.GetComponent<Renderer>().material.color = Color.yellow; // Color them yellow
+            Destroy(pillar.GetComponent<Collider>()); // Remove collider to avoid blocking
+
+            // 🔥 ADD this missing line
+            currentCornerHighlights.Add(pillar);
+        }
+    }
+
+
+
     void OnHighlightWall(InputAction.CallbackContext ctx)
     {
         if (!ctx.performed)
-            return; // Only react when the button is actually pressed
+            return;
 
         Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
         Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.yellow, 2f);
@@ -258,64 +366,37 @@ public class PrefabPlacer : MonoBehaviour
         {
             Transform root = hit.collider.transform.root;
             GameObject wall = root.gameObject;
-            Debug.Log("🎯 Hit object: " + hit.collider.gameObject.name);
-            Debug.Log("📦 Root object: " + root.name);
-            Debug.Log("🏰 Wall hit: " + wall.name);
 
-            // If the same wall is selected again, deselect it.
             if (selectedWall == wall)
             {
-                Debug.Log("🔄 Same wall selected again, deselecting.");
                 DeselectWall();
                 return;
             }
 
-            // Check that the wall is on the "Walls" layer.
             if (wall.layer == LayerMask.NameToLayer("Walls"))
             {
-                Debug.Log("✅ Wall is on 'Walls' layer, ready for animation.");
-
-                // Always deselect any previously selected wall.
-                DeselectWall();
+                DeselectWall(); // Clean up old selection first
 
                 selectedWall = wall;
-                Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
 
+                Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
                 if (renderers.Length == 0)
                 {
                     Debug.LogWarning("⚠️ No renderers found on selected wall.");
                     return;
                 }
 
-                // Clear and save original color values for every Renderer.
-                originalWallColors.Clear();
+                // Save original materials
+                originalWallMaterials.Clear();
                 foreach (Renderer rend in renderers)
                 {
-                    Color[] savedColors = new Color[rend.materials.Length];
-                    for (int i = 0; i < rend.materials.Length; i++)
-                    {
-                        // If the material has _BaseColor, use that; otherwise, use its color property.
-                        if (rend.materials[i].HasProperty("_BaseColor"))
-                            savedColors[i] = rend.materials[i].GetColor("_BaseColor");
-                        else
-                            savedColors[i] = rend.materials[i].color;
-                    }
-                    originalWallColors[rend] = savedColors;
+                    originalWallMaterials[rend] = rend.materials;
                 }
 
-                // Now modify the existing material instances to show the highlight color.
-                foreach (Renderer rend in renderers)
-                {
-                    for (int i = 0; i < rend.materials.Length; i++)
-                    {
-                        if (rend.materials[i].HasProperty("_BaseColor"))
-                            rend.materials[i].SetColor("_BaseColor", highlightColor);
-                        else
-                            rend.materials[i].color = highlightColor;
-                    }
-                }
+                // 🔥 CREATE CORNER HIGHLIGHTS HERE
+                CreateCornerHighlights(selectedWall); // << Add this line here!
 
-                // Assign DripFillController to WallFillSlider
+                // Assign DripFillController
                 DripFillController dripFill = selectedWall.GetComponent<DripFillController>();
                 if (wallFillSlider != null)
                 {
@@ -326,12 +407,17 @@ public class PrefabPlacer : MonoBehaviour
                     Debug.LogWarning("⚠️ No WallFillSlider assigned in PrefabPlacer!");
                 }
 
-                // Hide the ghost while the wall is selected and animating
                 if (ghostInstance != null)
                     ghostInstance.SetActive(false);
 
                 prefabMenu.SetActive(false);
                 animationMenu.SetActive(true);
+
+                // ✅ Start highlight fading
+                if (highlightFadeCoroutine != null)
+                    StopCoroutine(highlightFadeCoroutine);
+
+                highlightFadeCoroutine = StartCoroutine(FlashHighlight(selectedWall));
             }
             else
             {
@@ -340,38 +426,40 @@ public class PrefabPlacer : MonoBehaviour
         }
         else
         {
-            Debug.Log("🚫 No wall hit. Deselecting any selected wall.");
             DeselectWall();
         }
     }
+
+
     private void DeselectWall()
     {
         if (selectedWall != null)
         {
-            // Restore the original colors on all renderers.
-            foreach (var pair in originalWallColors)
+            // Restore original materials
+            foreach (var pair in originalWallMaterials)
             {
                 Renderer rend = pair.Key;
-                Color[] origColors = pair.Value;
                 if (rend == null) continue;
 
-                Material[] mats = rend.materials;
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    if (mats[i].HasProperty("_BaseColor"))
-                        mats[i].SetColor("_BaseColor", origColors[i]);
-                    else
-                        mats[i].color = origColors[i];
-                }
+                rend.materials = pair.Value;
             }
+
             Debug.Log("🔄 All original materials restored after deselection.");
+
+            // 🧹 Destroy all corner highlight pillars
+            foreach (GameObject pillar in currentCornerHighlights)
+            {
+                if (pillar != null)
+                    Destroy(pillar);
+            }
+            currentCornerHighlights.Clear();
         }
 
         selectedWall = null;
-        originalWallColors.Clear();
+        originalWallMaterials.Clear();
+
         SetupWallForFillSlider(selectedWall);
 
-        // Restore ghost visibility
         if (ghostInstance != null)
             ghostInstance.SetActive(true);
 

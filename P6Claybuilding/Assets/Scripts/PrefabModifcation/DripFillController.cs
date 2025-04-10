@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Collections;
+using UnityEngine.Formats.Alembic.Importer;
 
 public class DripFillController : MonoBehaviour, IPointerClickHandler
 {
@@ -9,6 +10,10 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public ParticleSystem dripParticles;
     public Material rippleMaterial;
     public Material originalMaterial;
+    public GameObject bucketPrefab;  // Prefab reference (assign this in the inspector)
+    public float fillStartDelay = 1.5f; // 🛠️ Adjustable delay before filling starts
+
+    public float bucketHeightAboveBox = 1f;  // How high above the object to spawn
 
     // Global reference for the currently selected object.
     public static DripFillController lastSelectedObject = null;
@@ -21,7 +26,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     private Vector3 originalPosition;
     private Transform boxTransform;        // Cached transform for the "Box" child.
     private bool buttonClicked = false;    // Flag for particle activation.
-
+    private GameObject spawnedBucket; // To keep track of the instantiated bucket
     // NEW: Flag to indicate the object has been placed.
     private bool isPlaced = false;
 
@@ -31,14 +36,13 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     private static readonly int _ObjectHeight = Shader.PropertyToID("_ObjectHeight");
 
     // Particle system offset in global space.
-    public float particleYOffset = 1f;
+    public float particleYOffset = 2f;
 
     // Public property so other scripts (like WallFillSlider) can read the current fill level.
     public float FillLevel
     {
         get { return currentFillLevel; }
     }
-
     void Start()
     {
         // Find the "Box" child.
@@ -48,9 +52,29 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             Renderer boxRenderer = boxTransform.GetComponent<Renderer>();
             if (boxRenderer != null)
             {
-                rippleMaterial = boxRenderer.material;
+                // Save original scale and position
                 originalScale = boxTransform.localScale;
                 originalPosition = boxTransform.localPosition;
+
+                // Assign the ripple material
+                rippleMaterial = boxRenderer.material; // ✅ This keeps your Ripple Shader!
+
+                // Safely copy textures and properties from the original material (if available)
+                Material originalMat = boxRenderer.sharedMaterial; // Original material before runtime instancing
+                if (originalMat != null)
+                {
+                    if (originalMat.HasProperty("_BaseMap"))
+                        rippleMaterial.SetTexture("_BaseMap", originalMat.GetTexture("_BaseMap"));
+
+                    if (originalMat.HasProperty("_BumpMap"))
+                        rippleMaterial.SetTexture("_BumpMap", originalMat.GetTexture("_BumpMap"));
+
+                    if (originalMat.HasProperty("_OcclusionMap"))
+                        rippleMaterial.SetTexture("_OcclusionMap", originalMat.GetTexture("_OcclusionMap"));
+
+                    if (originalMat.HasProperty("_Smoothness"))
+                        rippleMaterial.SetFloat("_Smoothness", originalMat.GetFloat("_Smoothness"));
+                }
             }
             else
             {
@@ -62,6 +86,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             Debug.LogError($"{gameObject.name}: 'Box' child not found!");
         }
 
+        // Pass object height to the shader if needed
         if (rippleMaterial != null)
         {
             rippleMaterial.SetFloat(_ObjectHeight, originalScale.y);
@@ -90,7 +115,15 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             return;
 
         UpdateDripEffect();
+
+        // --- New: Destroy Bucket when FillLevel is Complete ---
+        if (spawnedBucket != null && currentFillLevel >= 1f)
+        {
+            Destroy(spawnedBucket);
+            spawnedBucket = null;
+        }
     }
+
 
     void UpdateDripEffect()
     {
@@ -102,7 +135,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         {
             currentFillLevel = 1f;
             rippleMaterial.SetFloat(_FillAmount, 1f);
-            rippleMaterial.SetFloat(_RippleStrength, 0f);
+            rippleMaterial.SetFloat(_RippleStrength, 0.5f);
         }
         else
         {
@@ -111,28 +144,26 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         }
 
         // --- Update Box Scale & Position (Expanding Upward Only) ---
-        // This section should reflect your previously corrected logic—
-        // assuming that the Box is set to expand only upward.
         float newHeight = Mathf.Lerp(0.01f * originalScale.y, originalScale.y, currentFillLevel);
         boxTransform.localScale = new Vector3(originalScale.x, newHeight, originalScale.z);
-        // Here, we assume that your Box's pivot is correctly set (or has been adjusted)
-        // so that only the top rises. (i.e. the bottom remains in place.)
         boxTransform.localPosition = originalPosition;
 
         // --- Update Particle System Position Using Renderer Bounds ---
-        if (dripParticles != null)
+        if (dripParticles != null && boxTransform != null)
         {
             Renderer boxRenderer = boxTransform.GetComponent<Renderer>();
             if (boxRenderer != null)
             {
-                // Use the renderer's bounds; bounds.max.y is the actual top in world space.
                 Vector3 topWorldPos = boxRenderer.bounds.max;
-                float offsetY = 0.1f; // Adjust this value to set how far above the fill you want the particles.
-                Vector3 desiredParticlePos = topWorldPos + Vector3.up * offsetY;
+
+                // ✅ Adjustable Offsets
+                Vector3 particleOffset = new Vector3(-0.05f, 0.35f, 0f); // <- You can expose this as public if you want
+                Vector3 desiredParticlePos = topWorldPos + particleOffset;
+
                 dripParticles.transform.position = desiredParticlePos;
             }
 
-            // Activate particle system only if we are in drip mode and the box is still filling.
+            // Activate/deactivate particles
             if (isDripping && currentFillLevel < 1f)
             {
                 if (!dripParticles.gameObject.activeSelf)
@@ -147,6 +178,28 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
                 dripParticles.gameObject.SetActive(false);
             }
         }
+
+        // --- Update Bucket Position Using Box Renderer Bounds ---
+        if (spawnedBucket != null && boxTransform != null)
+        {
+            Renderer boxRenderer = boxTransform.GetComponent<Renderer>();
+            if (boxRenderer != null)
+            {
+                Vector3 topWorldPos = boxRenderer.bounds.max;
+
+                // ✅ Adjustable Offsets for bucket
+                Vector3 bucketOffset = new Vector3(0f, 0.5f, 0.2f); // <- You can expose this as public if you want
+                Vector3 desiredBucketPos = topWorldPos + bucketOffset;
+
+                spawnedBucket.transform.position = desiredBucketPos;
+            }
+        }
+    }
+
+
+    public void SetupBucketPrefab(GameObject prefab)
+    {
+        bucketPrefab = prefab;
     }
 
 
@@ -162,8 +215,6 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         }
     }
 
-
-
     public void OnPointerClick(PointerEventData eventData)
     {
         lastSelectedObject = this;
@@ -174,6 +225,9 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public void ResetDripEffect()
     {
         Debug.Log($"{gameObject.name}: ResetDripEffect()");
+
+        DestroyBucketIfExists();   // 🔥 Add this line to remove any leftover bucket
+
         StopAllCoroutines();
         isDripping = true;
         animateWobble = true;
@@ -189,11 +243,12 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         StartCoroutine(DripFillAnimation());
     }
 
+
     IEnumerator DripFillAnimation()
     {
         while (currentFillLevel < 1f)
         {
-            float randomSpeed = Random.Range(fillSpeed * 0.8f, fillSpeed * 1.2f);
+            float randomSpeed = Random.Range(fillSpeed * 0.5f, fillSpeed * 0.5f);
             currentFillLevel += Time.deltaTime * randomSpeed;
             yield return null;
         }
@@ -203,27 +258,85 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         StartCoroutine(FadeOutRipple());
     }
 
+
     public void StartSmoothFillWithoutDrip()
     {
         Debug.Log($"{gameObject.name}: StartSmoothFillWithoutDrip()");
         StopAllCoroutines();
         isDripping = false;
-        animateWobble = false;
+        animateWobble = true;
         currentFillLevel = 0f;
-        StartCoroutine(SmoothFillAnimation());
+
+        float slowFillSpeed = fillSpeed * 1f;
+
+        if (spawnedBucket == null && bucketPrefab != null)
+        {
+            // Spawn new bucket
+            Bounds totalBounds = new Bounds(transform.position, Vector3.zero);
+            foreach (Renderer r in GetComponentsInChildren<Renderer>())
+            {
+                totalBounds.Encapsulate(r.bounds);
+            }
+
+            Vector3 boundsCenter = totalBounds.center;
+            Vector3 boundsExtents = totalBounds.extents;
+
+            Vector3 spawnPosition = boundsCenter + new Vector3(0f, boundsExtents.y + bucketHeightAboveBox, -boundsExtents.z);
+
+            // ✅ Instantiate and set this object (transform) as the parent
+            spawnedBucket = Instantiate(bucketPrefab, spawnPosition, bucketPrefab.transform.rotation, this.transform);
+
+            // ✅ Reset animation when spawned
+            AlembicAutoPlay autoPlay = spawnedBucket.GetComponent<AlembicAutoPlay>();
+            if (autoPlay == null)
+            {
+                Debug.LogWarning("⚠️ Spawned bucket is missing AlembicAutoPlay script!");
+            }
+        }
+        else if (spawnedBucket != null)
+        {
+            // ✅ Reset animation even if reusing existing bucket
+            AlembicStreamPlayer streamPlayer = spawnedBucket.GetComponent<AlembicStreamPlayer>();
+            if (streamPlayer != null)
+            {
+                streamPlayer.CurrentTime = 0f;
+            }
+        }
+
+        StartCoroutine(SmoothFillAnimation(slowFillSpeed));
     }
 
-    IEnumerator SmoothFillAnimation()
+
+
+    IEnumerator SmoothFillAnimation(float speed)
+{
+    // 🛑 First, wait before starting the fill
+    if (fillStartDelay > 0f)
     {
-        while (currentFillLevel < 1f)
-        {
-            currentFillLevel += Time.deltaTime * fillSpeed;
-            yield return null;
-        }
-        currentFillLevel = 1f;
-        isDripping = false;
-        StartCoroutine(FadeOutRipple());
+        yield return new WaitForSeconds(fillStartDelay);
     }
+
+    // 🏁 Then start filling normally
+    while (currentFillLevel < 1f)
+    {
+        currentFillLevel += Time.deltaTime * speed;
+        yield return null;
+    }
+    currentFillLevel = 1f;
+    isDripping = false;
+    StartCoroutine(FadeOutRipple());
+}
+
+    public void DestroyBucketIfExists()
+    {
+        if (spawnedBucket != null)
+        {
+            Destroy(spawnedBucket);
+            spawnedBucket = null;
+            Debug.Log("🪣 Destroyed bucket because we're switching to drip mode.");
+        }
+    }
+
 
     public void SetFillLevel(float value)
     {

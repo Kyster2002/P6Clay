@@ -7,6 +7,12 @@ public class AutoSetupPrefab : MonoBehaviour
     public Material defaultRippleMaterial;   // Default material for ripple effect
     public ParticleSystem particleSystemPrefab; // Prefab for the particle system
     public Slider globalFillSlider; // Fill slider for scaling
+    public GameObject bucketPrefabAssetFromProject;
+
+    [Header("Optional Clay Textures for Ripple Material")]
+    public Texture2D clayDiffuseTexture;
+    public Texture2D clayNormalTexture;
+
 
     [Header("Whitelist of Object Names to Apply Ripple To")]
     public List<string> allowedNames = new List<string> { "Box" }; // Easily editable in Inspector
@@ -17,6 +23,20 @@ public class AutoSetupPrefab : MonoBehaviour
     {
         CheckForNewPrefabs();
     }
+
+    void ApplyTexturesToRippleMaterial(Material rippleMat)
+    {
+        if (rippleMat.HasProperty("_BaseMap") && clayDiffuseTexture != null)
+        {
+            rippleMat.SetTexture("_BaseMap", clayDiffuseTexture);
+        }
+        if (rippleMat.HasProperty("_NormalMap") && clayNormalTexture != null)
+        {
+            rippleMat.SetTexture("_NormalMap", clayNormalTexture);
+            rippleMat.EnableKeyword("_NORMALMAP"); // ✅ Enable normal map keyword
+        }
+    }
+
 
     void CheckForNewPrefabs()
     {
@@ -54,6 +74,7 @@ public class AutoSetupPrefab : MonoBehaviour
         if (firstRenderer != null)
         {
             DripFillController dripFill = obj.GetComponent<DripFillController>() ?? obj.AddComponent<DripFillController>();
+            dripFill.SetupBucketPrefab(bucketPrefabAssetFromProject);
             WallFillSlider wallFill = obj.GetComponent<WallFillSlider>() ?? obj.AddComponent<WallFillSlider>();
 
             // Whitelist for naming check.
@@ -75,7 +96,11 @@ public class AutoSetupPrefab : MonoBehaviour
                         if (originalMaterials[i].HasProperty("_BaseColor") && newRippleMat.HasProperty("_BaseColor"))
                         {
                             newRippleMat.SetColor("_BaseColor", originalMaterials[i].GetColor("_BaseColor"));
+
                         }
+                        // Also apply clay textures
+                        ApplyTexturesToRippleMaterial(newRippleMat);
+
 
                         updatedMaterials[i] = newRippleMat;
 
