@@ -7,54 +7,65 @@ public class PrefabButtonSpawner : MonoBehaviour
     [System.Serializable]
     public class SpawnableItem
     {
-        public GameObject prefab;
-        public Sprite icon;
+        public GameObject prefab; // The prefab to be selected
+        public Sprite icon;       // The sprite to assign to the button
     }
 
     [Header("UI References")]
-    public GameObject buttonPrefab; // Your button (should just be an Image + Button)
-    public Transform buttonPanelParent; // ScrollView Content object
+    public Button[] menuButtons; // Set these in the inspector (four buttons in your case)
 
     [Header("Spawnable Items")]
-    public List<SpawnableItem> spawnableItems = new List<SpawnableItem>();
+    public SpawnableItem[] spawnableItems; // Should have the same number of elements as menuButtons
 
-    // We'll use this later for placement
+    // This will hold the prefab you choose
     [HideInInspector] public GameObject selectedPrefab;
 
     private void Start()
     {
-        GenerateButtons();
-    }
-
-    void GenerateButtons()
-    {
-        foreach (SpawnableItem item in spawnableItems)
+        // Check if both arrays have the same length
+        if (menuButtons.Length != spawnableItems.Length)
         {
-            GameObject buttonObj = Instantiate(buttonPrefab, buttonPanelParent);
-            Button button = buttonObj.GetComponent<Button>();
-            Image img = buttonObj.GetComponentInChildren<Image>();
+            Debug.LogError("Number of menu buttons and spawnable items must be equal.");
+            return;
+        }
 
+        // Iterate over each button and assign the correct listener and icon
+        for (int i = 0; i < menuButtons.Length; i++)
+        {
+            int index = i; // Capture index for the lambda expression
+
+            // Get the button reference
+            Button button = menuButtons[i];
+            // Get the corresponding spawnable item
+            SpawnableItem item = spawnableItems[i];
+
+            // Set the button's image to match the spawnable item's icon
+            Image img = button.GetComponentInChildren<Image>();
             if (img != null && item.icon != null)
             {
                 img.sprite = item.icon;
 
+                // Optionally adjust aspect ratio, size, etc.
                 float aspectRatio = item.icon.rect.width / item.icon.rect.height;
                 float baseHeight = 100f;
                 float width = baseHeight * aspectRatio;
-
-                RectTransform rt = buttonObj.GetComponent<RectTransform>();
+                RectTransform rt = button.GetComponent<RectTransform>();
                 if (rt != null)
                     rt.sizeDelta = new Vector2(width, baseHeight);
             }
 
-            // 🖱 Hook up click event to select prefab
+            // Remove any pre-existing listeners (optional, but good for hygiene)
+            button.onClick.RemoveAllListeners();
+
+            // Add the click event listener
             button.onClick.AddListener(() =>
             {
+                // When the button is clicked, set the selected prefab
                 selectedPrefab = item.prefab;
+                // Optionally, update any preview or placement logic
                 FindObjectOfType<PrefabPlacer>()?.ForceRefreshGhost();
                 Debug.Log($"Selected prefab: {item.prefab.name}");
             });
         }
     }
-
 }
