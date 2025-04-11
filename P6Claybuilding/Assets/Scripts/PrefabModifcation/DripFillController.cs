@@ -27,8 +27,10 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     private Transform boxTransform;        // Cached transform for the "Box" child.
     private bool buttonClicked = false;    // Flag for particle activation.
     private GameObject spawnedBucket; // To keep track of the instantiated bucket
-    // NEW: Flag to indicate the object has been placed.
     private bool isPlaced = false;
+    private Renderer boxRenderer;   // Store the Renderer for the Box
+    private bool forceVisible = false; // When false, the Box remains hidden at low fill
+
 
     // -- SHADER PROPERTY IDs --
     private static readonly int _FillAmount = Shader.PropertyToID("_FillAmount");
@@ -49,7 +51,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         boxTransform = FindDeepChild(transform, "Box");
         if (boxTransform != null)
         {
-            Renderer boxRenderer = boxTransform.GetComponent<Renderer>();
+            boxRenderer = boxTransform.GetComponent<Renderer>(); // Cache the renderer
             if (boxRenderer != null)
             {
                 // Save original scale and position
@@ -59,7 +61,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
                 // Assign the ripple material
                 rippleMaterial = boxRenderer.material; // ✅ This keeps your Ripple Shader!
 
-                // Safely copy textures and properties from the original material (if available)
+                // Copy textures and properties from the original material (if available)
                 Material originalMat = boxRenderer.sharedMaterial; // Original material before runtime instancing
                 if (originalMat != null)
                 {
@@ -75,6 +77,8 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
                     if (originalMat.HasProperty("_Smoothness"))
                         rippleMaterial.SetFloat("_Smoothness", originalMat.GetFloat("_Smoothness"));
                 }
+                // Make the Box invisible initially
+                boxRenderer.enabled = false;
             }
             else
             {
@@ -95,6 +99,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         currentFillLevel = 0f;
         isDripping = false;
     }
+
 
     void Update()
     {
@@ -143,6 +148,20 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             rippleMaterial.SetFloat(_RippleStrength, animateWobble ? 0.3f : 0f);
         }
 
+        // --- Toggle Renderer Visibility Based on Fill Level & Animation Flag ---
+        if (!forceVisible && currentFillLevel <= 0.01f)
+        {
+            // Keep the Box invisible when fill is at minimum and an animation hasn’t been triggered
+            if (boxRenderer.enabled)
+                boxRenderer.enabled = false;
+        }
+        else
+        {
+            // Ensure the Box is visible when we are animating or the fill is beyond the minimum level
+            if (!boxRenderer.enabled)
+                boxRenderer.enabled = true;
+        }
+
         // --- Update Box Scale & Position (Expanding Upward Only) ---
         float newHeight = Mathf.Lerp(0.01f * originalScale.y, originalScale.y, currentFillLevel);
         boxTransform.localScale = new Vector3(originalScale.x, newHeight, originalScale.z);
@@ -157,7 +176,7 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
                 Vector3 topWorldPos = boxRenderer.bounds.max;
 
                 // ✅ Adjustable Offsets
-                Vector3 particleOffset = new Vector3(-0.05f, 0.35f, 0f); // <- You can expose this as public if you want
+                Vector3 particleOffset = new Vector3(0f, 0.35f, 0f); // <- You can expose this as public if you want
                 Vector3 desiredParticlePos = topWorldPos + particleOffset;
 
                 dripParticles.transform.position = desiredParticlePos;

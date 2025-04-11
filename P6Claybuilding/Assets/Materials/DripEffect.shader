@@ -81,8 +81,8 @@
                 half4 baseColor = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
 
                 // Optional: Sample normal map if you want lighting later
-                // float3 normalTex = SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, IN.uv).xyz * 2.0 - 1.0;
-                // For now we'll just use baseColor, no fancy normals yet.
+                float3 normalTex = SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, IN.uv).xyz * 2.0 - 1.0;
+                //For now we'll just use baseColor, no fancy normals yet.
 
                 return half4(baseColor.rgb, 1);
             }

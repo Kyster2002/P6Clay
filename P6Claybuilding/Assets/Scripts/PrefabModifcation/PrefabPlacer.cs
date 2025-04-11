@@ -440,13 +440,11 @@ private void OnEnable()
             {
                 Renderer rend = pair.Key;
                 if (rend == null) continue;
-
                 rend.materials = pair.Value;
             }
-
             Debug.Log("🔄 All original materials restored after deselection.");
 
-            // 🧹 Destroy all corner highlight pillars
+            // Destroy all corner highlight pillars
             foreach (GameObject pillar in currentCornerHighlights)
             {
                 if (pillar != null)
@@ -460,12 +458,16 @@ private void OnEnable()
 
         SetupWallForFillSlider(selectedWall);
 
-        if (ghostInstance != null)
-            ghostInstance.SetActive(true);
+        // Instead of reactivating the ghost, clear it
+        ClearGhost();
+
+        // Also, clear the prefab selection so that the ghost is not recreated automatically.
+        spawnerRef.selectedPrefab = null;
 
         prefabMenu.SetActive(true);
         animationMenu.SetActive(false);
     }
+
 
 
     void SetupWallForFillSlider(GameObject wall)
@@ -552,24 +554,47 @@ private void OnEnable()
 
     void OnUndo(InputAction.CallbackContext context)
     {
-        Debug.Log("Undo button pressed");
-
-        if (placedObjects.Count > 0)
+        // If a wall (object) is selected via the highlight method, delete that one.
+        if (selectedWall != null)
         {
-            GameObject last = placedObjects[placedObjects.Count - 1];
-            if (last != null)
+            Destroy(selectedWall);
+            Debug.Log("Deleted selected object.");
+
+            // Remove the selected object from the list, if it exists there.
+            if (placedObjects.Contains(selectedWall))
             {
-                Destroy(last);
-                Debug.Log("Undid last placed object");
+                placedObjects.Remove(selectedWall);
             }
-            placedObjects.RemoveAt(placedObjects.Count - 1);
+
+            // Clear any highlight or selection effects.
+            DeselectWall();
         }
         else
         {
-            Debug.LogWarning("Nothing to undo!");
+            Debug.LogWarning("No object selected for deletion. Please select an object first.");
+        }
+    }
+
+    public void DeleteAllPlacedObjects()
+    {
+        // Loop through all placed objects and destroy them.
+        foreach (GameObject obj in placedObjects)
+        {
+            if (obj != null)
+            {
+                Destroy(obj);
+            }
         }
 
+        // Clear the list.
+        placedObjects.Clear();
+
+        // Clear the selection if it exists.
+        DeselectWall();
+
+        Debug.Log("Deleted all placed objects.");
     }
+
 
 
     Vector3 SnapToGrid(Vector3 pos)

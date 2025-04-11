@@ -25,6 +25,7 @@ public class VRMenuSpawner : MonoBehaviour
         {
             toggleMenuAction.action.actionMap.Enable();
         }
+
     }
 
     void OnEnable()
