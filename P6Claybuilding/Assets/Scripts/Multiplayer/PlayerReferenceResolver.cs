@@ -13,6 +13,7 @@ public class PlayerReferenceResolver : MonoBehaviour
     private bool referencesResolved = false;
     public bool AreReferencesResolved => referencesResolved;
 
+    public event System.Action OnReferencesReady;
 
     private void Start()
     {
@@ -27,96 +28,101 @@ public class PlayerReferenceResolver : MonoBehaviour
             referencesResolved = AllReferencesFound();
             yield return new WaitForSecondsRealtime(0.5f);
         }
-        Debug.Log("✅ All references successfully resolved!");
+
+        OnReferencesReady?.Invoke();
     }
 
     private bool AllReferencesFound()
     {
-        return rayOrigin != null && spawnerRef != null && wallFillSlider != null;
+        return rayOrigin != null && rightController != null && headCamera != null;
     }
 
     private void TrySetupReferences()
     {
-
-        // Find Right Controller
         if (rightController == null)
-        {
-            GameObject rightHand = GameObject.Find("Right Controller");
-            if (rightHand != null)
-            {
-                rightController = rightHand.transform;
-                Debug.Log("✅ Right Controller found globally!");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Right Controller still not found, retrying...");
-            }
-        }
+            rightController = FindDeepChild(transform, "Right Controller");
 
-        // Find Head Camera
         if (headCamera == null)
-        {
-            GameObject camera = GameObject.Find("Main Camera");
-            if (camera != null)
-            {
-                headCamera = camera.transform;
-                Debug.Log("✅ Main Camera (Head Camera) found globally!");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Main Camera still not found, retrying...");
-            }
-        }
+            headCamera = FindDeepChild(transform, "Main Camera");
 
-        // Find Ray Origin
         if (rayOrigin == null)
         {
-            // Search globally if local search fails
-            GameObject leftHand = GameObject.Find("Left Controller");
-            if (leftHand != null)
+            var xrOrigin = GameObject.Find("XR Origin (XR Rig)");
+            if (xrOrigin != null)
             {
-                rayOrigin = leftHand.transform;
-                Debug.Log("✅ Ray Origin (Left Controller) found globally!");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Left Controller still not found, retrying...");
+                rayOrigin = FindDeepChild(xrOrigin.transform, "Left Controller");
+                if (rayOrigin != null)
+                    Debug.Log("✅ Found Left Controller!");
+                else
+                    Debug.LogWarning("⚠️ Could not find Left Controller under XR Origin!");
             }
         }
 
 
-        // Find Spawner Ref
         if (spawnerRef == null)
         {
             var eventSystem = GameObject.Find("EventSystem");
             if (eventSystem != null)
-            {
                 spawnerRef = eventSystem.GetComponentInChildren<PrefabButtonSpawner>();
-                if (spawnerRef != null)
-                {
-                    Debug.Log("✅ PrefabButtonSpawner found!");
-                }
-            }
         }
 
-        // Find Wall Fill Slider
         if (wallFillSlider == null)
         {
-            wallFillSlider = FindObjectOfType<WallFillSlider>();
-            if (wallFillSlider != null)
+            var spawnedMenu = GameObject.Find("SpawnedMenu");  // 🌱 Find your dynamic menu
+            if (spawnedMenu != null)
             {
-                Debug.Log("✅ WallFillSlider found!");
+                wallFillSlider = spawnedMenu.GetComponentInChildren<WallFillSlider>(true); // true = even disabled
+                if (wallFillSlider != null)
+                    Debug.Log("✅ Found WallFillSlider inside SpawnedMenu!");
+                else
+                    Debug.LogWarning("⚠️ WallFillSlider not found inside SpawnedMenu!");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ SpawnedMenu not found, can't search for WallFillSlider.");
             }
         }
 
-        // Find Visual Ray
         if (rayOrigin != null && visualRay == null)
         {
-            visualRay = rayOrigin.GetComponentInChildren<LineRenderer>();
+            visualRay = rayOrigin.GetComponentInChildren<LineRenderer>(true);
             if (visualRay != null)
             {
-                Debug.Log("✅ Visual Ray (LineRenderer) found!");
+                Debug.Log("✅ Found LineRenderer under Left Controller!");
+
+                // 🛠️ Parent and reset position here:
+                visualRay.transform.SetParent(rayOrigin);
+                visualRay.transform.localPosition = Vector3.zero;
+                visualRay.transform.localRotation = Quaternion.identity;
+                Debug.Log("✅ VisualRay parented and aligned to Left Controller!");
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ No LineRenderer found under Left Controller!");
             }
         }
+        // After finding the left controller inside PlayerReferenceResolver.cs
+
+        SimpleLaser simpleLaser = FindObjectOfType<SimpleLaser>();
+        if (simpleLaser != null)
+        {
+            simpleLaser.SetController(rayOrigin);
+
+        }
+
+    }
+
+    private Transform FindDeepChild(Transform parent, string targetName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == targetName)
+                return child;
+
+            Transform found = FindDeepChild(child, targetName);
+            if (found != null)
+                return found;
+        }
+        return null;
     }
 }

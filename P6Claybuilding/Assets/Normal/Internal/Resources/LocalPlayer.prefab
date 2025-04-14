@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2373908737483939724}
   - component: {fileID: 8936256428008217112}
+  - component: {fileID: 224299799735050995}
   m_Layer: 0
   m_Name: LineRenderer
   m_TagString: Untagged
@@ -139,6 +140,19 @@ LineRenderer:
   m_UseWorldSpace: 1
   m_Loop: 0
   m_ApplyActiveColorSpace: 1
+--- !u!114 &224299799735050995
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2612457417567480094}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3f37725d53607a4b86181b256950eb0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parentNameToFind: Left Controller
 --- !u!1 &7739875222009317806
 GameObject:
   m_ObjectHideFlags: 0
@@ -151,6 +165,8 @@ GameObject:
   - component: {fileID: 5203547418355642407}
   - component: {fileID: 7094479480755911908}
   - component: {fileID: -8937619031689952312}
+  - component: {fileID: 7347790124983095702}
+  - component: {fileID: -2652909436543315286}
   m_Layer: 10
   m_Name: LocalPlayer
   m_TagString: Walls
@@ -234,6 +250,39 @@ MonoBehaviour:
   _head: {fileID: 0}
   _leftHand: {fileID: 0}
   _rightHand: {fileID: 0}
+--- !u!114 &7347790124983095702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7739875222009317806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72bd53ae030fb05418af4eaae45813c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-2652909436543315286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7739875222009317806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be62a27e569029b4e9fac7d77b6ee2db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  references: {fileID: 7347790124983095702}
+  toggleMenuAction: {fileID: -3539670355331948058, guid: 502a7114fce6e334ba5565379b06c9eb,
+    type: 3}
+  menuPrefab: {fileID: 4924091872257472650, guid: b0d473a18f5ed674e9ee8bc287491181,
+    type: 3}
+  menuCanvas: {fileID: 4924091872257472650, guid: b0d473a18f5ed674e9ee8bc287491181,
+    type: 3}
+  offset: {x: 0, y: 0, z: 1}
+  followSpeed: 10
 --- !u!1001 &6622881708746220927
 PrefabInstance:
   m_ObjectHideFlags: 0

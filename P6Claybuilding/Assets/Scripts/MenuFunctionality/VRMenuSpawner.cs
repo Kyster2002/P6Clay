@@ -1,72 +1,39 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
-using System.Collections;
-
 
 public class VRMenuSpawner : MonoBehaviour
 {
     [Header("References")]
-    public Transform rightController;
-    public Transform headCamera;
-    public GameObject menuCanvas;
-    public PrefabPlacer placer; // << Added this
+    public PlayerReferenceResolver references;
     public InputActionReference toggleMenuAction;
 
-    [Header("Settings")]
-    public Vector3 offset = new Vector3(0, 0.1f, 0.2f);
-    public float followSpeed = 10f;
+    [Header("Menu Prefab")]
+    [SerializeField] private GameObject menuPrefab;
+    public GameObject menuCanvas;
 
     private bool menuVisible = false;
-    private PlayerReferenceResolver references;
+    private bool menuSpawned = false;
+    private Transform rightController;
+    private Transform headCamera;
 
-    private IEnumerator Start()
+    [Header("Follow Settings")]
+    public Vector3 offset = new Vector3(0, 0f, 1f);
+    public float followSpeed = 10f;
+
+    private void Start()
     {
-        // First, do your existing stuff
-        if (menuCanvas != null)
-            menuCanvas.SetActive(false);
+        references = GetComponent<PlayerReferenceResolver>();
+        references.OnReferencesReady += OnReferencesReady;
 
         if (toggleMenuAction != null && !toggleMenuAction.action.actionMap.enabled)
-        {
             toggleMenuAction.action.actionMap.Enable();
-        }
 
-        // Now, get the references
-        references = GetComponent<PlayerReferenceResolver>();
-
-        if (references == null)
-        {
-            Debug.LogError("❌ PlayerReferenceResolver not found on this player!");
-            yield break;
-        }
-
-        // Wait until references are ready
-        while (!references.AreReferencesResolved)
-        {
-            yield return null;
-        }
-
-        Debug.Log("✅ VRMenuSpawner is now linked to PlayerReferences!");
-
-        // Supply the references
-        rightController = references.rightController;
-        headCamera = references.headCamera;
+        toggleMenuAction.action.performed += ToggleMenu;
     }
 
-    void OnEnable()
+    private void Update()
     {
-        if (toggleMenuAction != null)
-            toggleMenuAction.action.performed += ToggleMenu;
-    }
-
-    void OnDisable()
-    {
-        if (toggleMenuAction != null)
-            toggleMenuAction.action.performed -= ToggleMenu;
-    }
-
-    void Update()
-    {
-        if (!menuVisible || menuCanvas == null || rightController == null || headCamera == null)
+        if (!menuVisible || !menuSpawned || menuCanvas == null || rightController == null || headCamera == null)
             return;
 
         Vector3 targetPosition = rightController.position + rightController.TransformDirection(offset);
@@ -74,21 +41,78 @@ public class VRMenuSpawner : MonoBehaviour
 
         Vector3 lookDirection = menuCanvas.transform.position - headCamera.position;
         lookDirection.y = 0;
-        menuCanvas.transform.rotation = Quaternion.LookRotation(lookDirection);
+        if (lookDirection != Vector3.zero)
+            menuCanvas.transform.rotation = Quaternion.LookRotation(lookDirection);
     }
 
-    void ToggleMenu(InputAction.CallbackContext ctx)
+    private void OnReferencesReady()
     {
-        menuVisible = !menuVisible;
+        rightController = references.rightController;
+        headCamera = references.headCamera;
 
-        if (menuCanvas != null)
-        {
-            menuCanvas.SetActive(menuVisible);
-        }
-
+        // 🛠️ Dynamically setup PrefabPlacer
+        PrefabPlacer placer = FindObjectOfType<PrefabPlacer>();
         if (placer != null)
         {
-            placer.SetMenuOpen(menuVisible); // << stable!
+            placer.rayOrigin = references.rayOrigin;
+            placer.spawnerRef = references.spawnerRef;
+            placer.wallFillSlider = references.wallFillSlider;
         }
+        else
+        {
+            Debug.LogError("❌ PrefabPlacer not found in scene!");
+        }
+
+        SpawnMenu();
+    }
+
+
+    private void ToggleMenu(InputAction.CallbackContext ctx)
+    {
+        if (!menuSpawned)
+            return;
+
+        menuVisible = !menuVisible;
+        if (menuCanvas != null)
+            menuCanvas.SetActive(menuVisible);
+    }
+
+    private void SpawnMenu()
+    {
+        if (menuPrefab == null)
+            return;
+
+        menuCanvas = Instantiate(menuPrefab);
+        menuCanvas.name = "SpawnedMenu";
+
+        menuCanvas.transform.SetParent(null);
+        menuCanvas.transform.localScale = Vector3.one;
+        menuCanvas.GetComponent<Canvas>().renderMode = RenderMode.WorldSpace;
+
+        if (headCamera != null)
+            menuCanvas.GetComponent<Canvas>().worldCamera = headCamera.GetComponent<Camera>();
+
+        menuCanvas.SetActive(true);
+        menuSpawned = true;
+        menuVisible = true;
+
+        // 🛠️ NEW: Initialize button spawner
+        var buttonSpawner = menuCanvas.GetComponentInChildren<PrefabButtonSpawner>();
+        if (buttonSpawner != null)
+        {
+            buttonSpawner.Initialize();
+
+            // 🛠️ OPTIONAL: Link to PrefabPlacer if needed
+            var prefabPlacer = FindObjectOfType<PrefabPlacer>();
+            if (prefabPlacer != null)
+                prefabPlacer.spawnerRef = buttonSpawner;
+        }
+    }
+
+
+    private void OnDestroy()
+    {
+        if (toggleMenuAction != null)
+            toggleMenuAction.action.performed -= ToggleMenu;
     }
 }
