@@ -718,14 +718,16 @@ MonoBehaviour:
   - {fileID: 60594994}
   - {fileID: 1304871538}
   spawnableItems:
-  - prefab: {fileID: 500043412007192379, guid: 2bcb0237e7530c54eab5988b38851ae3, type: 3}
-    icon: {fileID: 21300000, guid: edfdae895e8e8ec4f917fd83f98f69fc, type: 3}
-  - prefab: {fileID: 2796030645157774629, guid: c331db970b511214c941abcc409cf8ae,
+  - prefab: {fileID: 5549077249569438025, guid: 5eb9e7c6193c2a04a9ec0ef43eb81fd0,
       type: 3}
     icon: {fileID: 21300000, guid: edfdae895e8e8ec4f917fd83f98f69fc, type: 3}
-  - prefab: {fileID: 500043412007192379, guid: 2bcb0237e7530c54eab5988b38851ae3, type: 3}
+  - prefab: {fileID: 2035982413359175276, guid: 94fdee5370ff33c4aa148efa7f96006f,
+      type: 3}
     icon: {fileID: 21300000, guid: edfdae895e8e8ec4f917fd83f98f69fc, type: 3}
-  - prefab: {fileID: 2796030645157774629, guid: c331db970b511214c941abcc409cf8ae,
+  - prefab: {fileID: 7801621954115383344, guid: f6cfc557d00c52c459facc1e4160c910,
+      type: 3}
+    icon: {fileID: 21300000, guid: edfdae895e8e8ec4f917fd83f98f69fc, type: 3}
+  - prefab: {fileID: 7179032600608781010, guid: e30f215d53241b7498de23d5346591a1,
       type: 3}
     icon: {fileID: 21300000, guid: edfdae895e8e8ec4f917fd83f98f69fc, type: 3}
   selectedPrefab: {fileID: 0}
