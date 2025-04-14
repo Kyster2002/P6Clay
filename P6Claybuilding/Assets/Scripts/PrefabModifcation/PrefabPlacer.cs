@@ -22,6 +22,7 @@ public class PrefabPlacer : MonoBehaviour
     public Transform rayOrigin;
     public PrefabButtonSpawner spawnerRef;
     public WallFillSlider wallFillSlider;
+    private PlayerReferenceResolver references;
 
     [Header("Input")]
     public InputActionReference placeAction;
@@ -69,7 +70,7 @@ public class PrefabPlacer : MonoBehaviour
 
 
 
-private void OnEnable()
+    private void OnEnable()
     {
 
         placeAction.action.performed += OnPlace;
@@ -92,8 +93,35 @@ private void OnEnable()
     void Start()
     {
         StartCoroutine(DisableLaserNextFrame()); // << 🛡️ new
+        references = GetComponent<PlayerReferenceResolver>();
+
+        if (references != null)
+        {
+            StartCoroutine(WaitForReferencesReady());
+        }
+        else
+        {
+            Debug.LogError("❌ PlayerReferenceResolver not found on this player!");
+        }
 
     }
+
+    private IEnumerator WaitForReferencesReady()
+    {
+        while (!references.AreReferencesResolved)
+        {  // I'll show this small addition below
+            yield return null;
+        }
+
+        Debug.Log("✅ PrefabPlacer is now linked to PlayerReferences!");
+
+        // Supply the references you need
+        rayOrigin = references.rayOrigin;
+        visualRay = references.visualRay;
+        wallFillSlider = references.wallFillSlider;  // optional if you need it
+    }
+
+
     private IEnumerator DisableLaserNextFrame()
     {
         yield return null; // 🕓 wait 1 frame
@@ -101,8 +129,9 @@ private void OnEnable()
         if (visualRay != null)
         {
             visualRay.enabled = false;
-           
+
         }
+
     }
 
 
@@ -159,6 +188,10 @@ private void OnEnable()
         }
 
     }
+    private void Awake()
+    {
+
+    }
 
 
 
@@ -188,7 +221,7 @@ private void OnEnable()
 
         GameObject prefab = spawnerRef.selectedPrefab;
         if (prefab == null || rayOrigin == null) return;
-       
+
 
 
         Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
@@ -219,6 +252,13 @@ private void OnEnable()
             ghostInstance = Instantiate(prefab, snappedPos, prefab.transform.rotation); // Regular spawn
             ghostInstance.name = prefab.name + "(Ghost)";
 
+            // 🛠️ DISABLE RealtimeView + RealtimeTransform
+            var realtimeView = ghostInstance.GetComponent<Normal.Realtime.RealtimeView>();
+            if (realtimeView != null) realtimeView.enabled = false;
+
+            var realtimeTransform = ghostInstance.GetComponent<Normal.Realtime.RealtimeTransform>();
+            if (realtimeTransform != null) realtimeTransform.enabled = false;
+
             SetLayerRecursively(ghostInstance, LayerMask.NameToLayer("Ignore Raycast"));
             DisableColliders(ghostInstance);
             ApplyGhostMaterial(ghostInstance);
@@ -226,6 +266,7 @@ private void OnEnable()
             // Apply saved rotation immediately after creating ghost
             ghostInstance.transform.rotation = manualRotation;
         }
+
 
         // Always update ghost position and rotation smoothly
         if (ghostInstance != null)
@@ -254,74 +295,7 @@ private void OnEnable()
         }
     }
 
-    private IEnumerator FlashHighlight(GameObject wall)
-    {
-        if (wall == null) yield break;
 
-        Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
-        if (renderers.Length == 0) yield break;
-
-        float elapsed = 0f;
-        float halfDuration = highlightDuration / 2f;
-
-        // First half: Fade in
-        while (elapsed < halfDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-
-            foreach (Renderer rend in renderers)
-            {
-                if (!originalWallColors.ContainsKey(rend)) continue;
-
-                Color[] originalColors = originalWallColors[rend];
-                for (int i = 0; i < rend.materials.Length; i++)
-                {
-                    Color fromColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
-                    Color toColor = highlightColor;
-                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
-
-                    if (rend.materials[i].HasProperty("_BaseColor"))
-                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
-                    else
-                        rend.materials[i].color = lerpedColor;
-                }
-            }
-
-            yield return null;
-        }
-
-        elapsed = 0f;
-
-        // Second half: Fade out
-        while (elapsed < halfDuration)
-        {
-            elapsed += Time.deltaTime;
-            float t = Mathf.Clamp01(elapsed / halfDuration);
-
-            foreach (Renderer rend in renderers)
-            {
-                if (!originalWallColors.ContainsKey(rend)) continue;
-
-                Color[] originalColors = originalWallColors[rend];
-                for (int i = 0; i < rend.materials.Length; i++)
-                {
-                    Color fromColor = highlightColor;
-                    Color toColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
-                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
-
-                    if (rend.materials[i].HasProperty("_BaseColor"))
-                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
-                    else
-                        rend.materials[i].color = lerpedColor;
-                }
-            }
-
-            yield return null;
-        }
-
-        highlightFadeCoroutine = null; // Clear coroutine reference when done
-    }
 
     void CreateCornerHighlights(GameObject wall)
     {
@@ -413,11 +387,6 @@ private void OnEnable()
                 prefabMenu.SetActive(false);
                 animationMenu.SetActive(true);
 
-                // ✅ Start highlight fading
-                if (highlightFadeCoroutine != null)
-                    StopCoroutine(highlightFadeCoroutine);
-
-                highlightFadeCoroutine = StartCoroutine(FlashHighlight(selectedWall));
             }
             else
             {
@@ -533,7 +502,19 @@ private void OnEnable()
         Destroy(ghostInstance);
         ghostInstance = null;
 
-        GameObject placed = Instantiate(spawnerRef.selectedPrefab, finalPos, finalRot);
+        // Ensure prefab name is clean
+        string cleanPrefabName = spawnerRef.selectedPrefab.name.Replace("(Clone)", "").Trim();
+        Debug.Log("Attempting to instantiate prefab: " + cleanPrefabName);
+
+        GameObject placed = Normal.Realtime.Realtime.Instantiate(
+            cleanPrefabName,
+            finalPos,
+            finalRot,
+            ownedByClient: true,
+            preventOwnershipTakeover: false,
+            useInstance: GetComponent<Normal.Realtime.Realtime>()
+        );
+
         placed.tag = "Ground";
 
         lastPlacedInstance = placed;
@@ -548,6 +529,8 @@ private void OnEnable()
             controller.OnPlaced();
         }
     }
+
+
 
 
 

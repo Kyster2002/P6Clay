@@ -1,5 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections;
+
 
 public class VRMenuSpawner : MonoBehaviour
 {
@@ -15,9 +17,11 @@ public class VRMenuSpawner : MonoBehaviour
     public float followSpeed = 10f;
 
     private bool menuVisible = false;
+    private PlayerReferenceResolver references;
 
-    void Start()
+    private IEnumerator Start()
     {
+        // First, do your existing stuff
         if (menuCanvas != null)
             menuCanvas.SetActive(false);
 
@@ -26,6 +30,26 @@ public class VRMenuSpawner : MonoBehaviour
             toggleMenuAction.action.actionMap.Enable();
         }
 
+        // Now, get the references
+        references = GetComponent<PlayerReferenceResolver>();
+
+        if (references == null)
+        {
+            Debug.LogError("❌ PlayerReferenceResolver not found on this player!");
+            yield break;
+        }
+
+        // Wait until references are ready
+        while (!references.AreReferencesResolved)
+        {
+            yield return null;
+        }
+
+        Debug.Log("✅ VRMenuSpawner is now linked to PlayerReferences!");
+
+        // Supply the references
+        rightController = references.rightController;
+        headCamera = references.headCamera;
     }
 
     void OnEnable()

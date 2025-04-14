@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.normalvr.normcore": "2.15.2",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.spriteshape": "10.0.7",
     "com.unity.burst": "1.8.18",
@@ -11,6 +12,7 @@
     "com.unity.netcode.gameobjects": "1.10.0",
     "com.unity.postprocessing": "3.4.0",
     "com.unity.probuilder": "6.0.5",
+    "com.unity.profiling.core": "1.0.2",
     "com.unity.render-pipelines.universal": "17.0.3",
     "com.unity.services.authentication": "3.3.3",
     "com.unity.services.multiplayer": "1.0.2",
@@ -52,5 +54,15 @@
     "com.unity.modules.vr": "1.0.0",
     "com.unity.modules.wind": "1.0.0",
     "com.unity.modules.xr": "1.0.0"
-  }
+  },
+  "scopedRegistries": [
+    {
+      "name": "Normal",
+      "url": "https://normcore-registry.normcore.io",
+      "scopes": [
+        "com.normalvr",
+        "io.normcore"
+      ]
+    }
+  ]
 }
