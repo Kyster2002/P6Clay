@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.normalvr.normcore": "2.15.2",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.2d.spriteshape": "10.0.7",
     "com.unity.burst": "1.8.18",
