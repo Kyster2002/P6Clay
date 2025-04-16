@@ -1,78 +1,71 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 
 public class PrefabButtonSpawner : MonoBehaviour
 {
     [System.Serializable]
     public class SpawnableItem
     {
-        public GameObject prefab;
-        public Sprite icon;
+        public GameObject prefab; // The prefab to be selected
+        public Sprite icon;       // The sprite to assign to the button
     }
 
-    [Header("Spawnable Items")]
-    public SpawnableItem[] spawnableItems;
+    [Header("UI References")]
+    public Button[] menuButtons; // Set these in the inspector (four buttons in your case)
 
-    private Button[] menuButtons;
+    [Header("Spawnable Items")]
+    public SpawnableItem[] spawnableItems; // Should have the same number of elements as menuButtons
+
+    // This will hold the prefab you choose
     [HideInInspector] public GameObject selectedPrefab;
 
-    public void Initialize()
+    private void Start()
     {
-        // 🧠 Try to use self if already Content
-        Transform contentTransform = transform.name == "Content" ? transform : FindDeepChild(transform, "Content");
-
-        if (contentTransform == null)
-        {
-            Debug.LogError("❌ Content not found inside spawned menu!");
-            return;
-        }
-
-        menuButtons = contentTransform.GetComponentsInChildren<Button>();
-        if (menuButtons.Length == 0)
-        {
-            Debug.LogError("❌ No buttons found under Content!");
-            return;
-        }
-
+        // Check if both arrays have the same length
         if (menuButtons.Length != spawnableItems.Length)
         {
-            Debug.LogError($"❌ Number of buttons ({menuButtons.Length}) and spawnable items ({spawnableItems.Length}) does not match!");
+            Debug.LogError("Number of menu buttons and spawnable items must be equal.");
             return;
         }
 
+        // Iterate over each button and assign the correct listener and icon
         for (int i = 0; i < menuButtons.Length; i++)
         {
-            int index = i;
-            Image img = menuButtons[i].GetComponentInChildren<Image>();
-            if (img != null && spawnableItems[i].icon != null)
+            int index = i; // Capture index for the lambda expression
+
+            // Get the button reference
+            Button button = menuButtons[i];
+            // Get the corresponding spawnable item
+            SpawnableItem item = spawnableItems[i];
+
+            // Set the button's image to match the spawnable item's icon
+            Image img = button.GetComponentInChildren<Image>();
+            if (img != null && item.icon != null)
             {
-                img.sprite = spawnableItems[i].icon;
-                img.preserveAspect = true;
+                img.sprite = item.icon;
+
+                // Optionally adjust aspect ratio, size, etc.
+                float aspectRatio = item.icon.rect.width / item.icon.rect.height;
+                float baseHeight = 100f;
+                float width = baseHeight * aspectRatio;
+                RectTransform rt = button.GetComponent<RectTransform>();
+                if (rt != null)
+                    rt.sizeDelta = new Vector2(width, baseHeight);
             }
 
-            menuButtons[i].onClick.RemoveAllListeners();
-            menuButtons[i].onClick.AddListener(() =>
+            // Remove any pre-existing listeners (optional, but good for hygiene)
+            button.onClick.RemoveAllListeners();
+
+            // Add the click event listener
+            button.onClick.AddListener(() =>
             {
-                selectedPrefab = spawnableItems[index].prefab;
-                Debug.Log($"✅ Selected prefab: {selectedPrefab.name}");
+                // When the button is clicked, set the selected prefab
+                selectedPrefab = item.prefab;
+                // Optionally, update any preview or placement logic
+                FindObjectOfType<PrefabPlacer>()?.ForceRefreshGhost();
+                Debug.Log($"Selected prefab: {item.prefab.name}");
             });
         }
     }
-
-
-    // Deep search helper
-    private Transform FindDeepChild(Transform parent, string targetName)
-    {
-        foreach (Transform child in parent)
-        {
-            if (child.name == targetName)
-                return child;
-
-            Transform found = FindDeepChild(child, targetName);
-            if (found != null)
-                return found;
-        }
-        return null;
-    }
-
 }

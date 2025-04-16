@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
 using System.Collections;
-using UnityEngine.UI;
 
 
 public class PrefabPlacer : MonoBehaviour
@@ -15,16 +14,14 @@ public class PrefabPlacer : MonoBehaviour
 
     [Header("Highlight Settings")]
 
+    private float highlightDuration = 2f; // Duration of highlight fade in/out
     private Coroutine highlightFadeCoroutine;
     private List<GameObject> currentCornerHighlights = new List<GameObject>();
-    private SimpleLaser simpleLaser;
-
 
     [Header("References")]
     public Transform rayOrigin;
     public PrefabButtonSpawner spawnerRef;
     public WallFillSlider wallFillSlider;
-    private PlayerReferenceResolver references;
 
     [Header("Input")]
     public InputActionReference placeAction;
@@ -34,7 +31,7 @@ public class PrefabPlacer : MonoBehaviour
 
     [Header("Placement Settings")]
     public float maxRayDistance = 100f;
-    public LayerMask placementLayers; 
+    public LayerMask placementLayers;
     public float gridSize = 0.5f;
     public Material ghostMaterial;
     [SerializeField] float ghostSmoothSpeed = 15f;
@@ -57,8 +54,6 @@ public class PrefabPlacer : MonoBehaviour
     public GameObject prefabMenu;
     public GameObject animationMenu;
     public VRMenuSpawner menuSpawnerRef;
-    public PrefabButtonSpawner buttonSpawnerRef;
-
 
     [Header("Rotation Control")]
     public float rotateSpeed = 90f;
@@ -74,7 +69,7 @@ public class PrefabPlacer : MonoBehaviour
 
 
 
-    private void OnEnable()
+private void OnEnable()
     {
 
         placeAction.action.performed += OnPlace;
@@ -97,114 +92,8 @@ public class PrefabPlacer : MonoBehaviour
     void Start()
     {
         StartCoroutine(DisableLaserNextFrame()); // << 🛡️ new
-        references = GetComponent<PlayerReferenceResolver>();
-
-        if (references != null)
-        {
-            StartCoroutine(WaitForReferencesReady());
-        }
-        else
-        {
-            Debug.LogError("❌ PlayerReferenceResolver not found on this player!");
-        }
-        StartCoroutine(WaitForSpawnedMenu());
-
 
     }
-
-    private IEnumerator WaitForReferencesReady()
-    {
-        while (!references.AreReferencesResolved)
-            yield return null;
-
-        Debug.Log("✅ PrefabPlacer is now linked to PlayerReferences!");
-
-        rayOrigin = references.rayOrigin;
-        visualRay = references.visualRay;
-
-        if (visualRay != null && rayOrigin != null)
-        {
-            visualRay.transform.SetParent(rayOrigin);
-            visualRay.transform.localPosition = Vector3.zero;
-            visualRay.transform.localRotation = Quaternion.identity;
-
-            visualRay.useWorldSpace = true; // 🔥 ADD THIS 🔥
-
-            Debug.Log("✅ VisualRay parented and aligned to Left Controller!");
-        }
-
-        wallFillSlider = references.wallFillSlider;
-        spawnerRef = FindAnyObjectByType<PrefabButtonSpawner>();
-        menuSpawnerRef = FindAnyObjectByType<VRMenuSpawner>();
-
-        simpleLaser = references.rayOrigin.GetComponentInChildren<SimpleLaser>();
-        if (simpleLaser != null)
-            Debug.Log("✅ SimpleLaser found through PlayerReferenceResolver!");
-        else
-            Debug.LogError("❌ SimpleLaser NOT found through PlayerReferenceResolver!");
-
-        StartCoroutine(WaitForSpawnedMenu());
-
-    }
-
-
-
-
-    private IEnumerator WaitForSpawnedMenu()
-    {
-        GameObject spawnedMenu = null;
-
-        while (spawnedMenu == null)
-        {
-            spawnedMenu = GameObject.Find("SpawnedMenu");
-            yield return null;
-        }
-
-        prefabMenu = spawnedMenu.transform.Find("Prefab")?.gameObject;
-
-        // 👇 NEW: Find the "Slider" dynamically without assuming Animation folder
-        Transform[] allChildren = spawnedMenu.GetComponentsInChildren<Transform>(true);
-        foreach (Transform child in allChildren)
-        {
-            if (child.name == "Slider")
-            {
-                animationMenu = child.gameObject;
-                break;
-            }
-        }
-
-        if (prefabMenu != null)
-            prefabMenu.SetActive(false); // Start closed
-        if (animationMenu != null)
-            animationMenu.SetActive(false); // Start closed
-
-        // 🔥 Find WallFillSlider even if inactive
-        wallFillSlider = spawnedMenu.GetComponentInChildren<WallFillSlider>(true);
-        if (wallFillSlider != null)
-        {
-            Slider sliderComponent = spawnedMenu.GetComponentInChildren<Slider>(true);
-            if (sliderComponent != null)
-            {
-                wallFillSlider.fillSlider = sliderComponent;
-                Debug.Log("✅ WallFillSlider and Slider dynamically assigned!");
-            }
-            else
-            {
-                Debug.LogWarning("⚠️ Could not find Slider component inside SpawnedMenu!");
-            }
-        }
-        else
-        {
-            Debug.LogWarning("⚠️ Could not find WallFillSlider inside SpawnedMenu!");
-        }
-
-        Debug.Log("✅ SpawnedMenu found and menus assigned dynamically.");
-    }
-
-
-
-
-
     private IEnumerator DisableLaserNextFrame()
     {
         yield return null; // 🕓 wait 1 frame
@@ -212,33 +101,8 @@ public class PrefabPlacer : MonoBehaviour
         if (visualRay != null)
         {
             visualRay.enabled = false;
-
+           
         }
-
-    }
-    public void OpenPrefabMenu()
-    {
-        if (prefabMenu == null)
-        {
-            Debug.LogWarning("⚠️ Prefab Menu not assigned dynamically yet!");
-            return;
-        }
-
-        prefabMenu.SetActive(true);
-
-        if (animationMenu != null)
-            animationMenu.SetActive(false); // Always close animation menu
-    }
-
-    void SwitchMenusForWallSelection()
-    {
-        if (prefabMenu != null && prefabMenu.activeSelf)
-            prefabMenu.SetActive(false); // Only close if actually open
-
-        if (animationMenu != null)
-            animationMenu.SetActive(true); // Always try opening animation
-        else
-            Debug.LogWarning("⚠️ Animation Menu missing, can't open it.");
     }
 
 
@@ -295,10 +159,6 @@ public class PrefabPlacer : MonoBehaviour
         }
 
     }
-    private void Awake()
-    {
-
-    }
 
 
 
@@ -328,7 +188,7 @@ public class PrefabPlacer : MonoBehaviour
 
         GameObject prefab = spawnerRef.selectedPrefab;
         if (prefab == null || rayOrigin == null) return;
-
+       
 
 
         Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
@@ -359,13 +219,6 @@ public class PrefabPlacer : MonoBehaviour
             ghostInstance = Instantiate(prefab, snappedPos, prefab.transform.rotation); // Regular spawn
             ghostInstance.name = prefab.name + "(Ghost)";
 
-            // 🛠️ DISABLE RealtimeView + RealtimeTransform
-            var realtimeView = ghostInstance.GetComponent<Normal.Realtime.RealtimeView>();
-            if (realtimeView != null) realtimeView.enabled = false;
-
-            var realtimeTransform = ghostInstance.GetComponent<Normal.Realtime.RealtimeTransform>();
-            if (realtimeTransform != null) realtimeTransform.enabled = false;
-
             SetLayerRecursively(ghostInstance, LayerMask.NameToLayer("Ignore Raycast"));
             DisableColliders(ghostInstance);
             ApplyGhostMaterial(ghostInstance);
@@ -373,7 +226,6 @@ public class PrefabPlacer : MonoBehaviour
             // Apply saved rotation immediately after creating ghost
             ghostInstance.transform.rotation = manualRotation;
         }
-
 
         // Always update ghost position and rotation smoothly
         if (ghostInstance != null)
@@ -402,57 +254,104 @@ public class PrefabPlacer : MonoBehaviour
         }
     }
 
+    private IEnumerator FlashHighlight(GameObject wall)
+    {
+        if (wall == null) yield break;
 
+        Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0) yield break;
+
+        float elapsed = 0f;
+        float halfDuration = highlightDuration / 2f;
+
+        // First half: Fade in
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / halfDuration);
+
+            foreach (Renderer rend in renderers)
+            {
+                if (!originalWallColors.ContainsKey(rend)) continue;
+
+                Color[] originalColors = originalWallColors[rend];
+                for (int i = 0; i < rend.materials.Length; i++)
+                {
+                    Color fromColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
+                    Color toColor = highlightColor;
+                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
+
+                    if (rend.materials[i].HasProperty("_BaseColor"))
+                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
+                    else
+                        rend.materials[i].color = lerpedColor;
+                }
+            }
+
+            yield return null;
+        }
+
+        elapsed = 0f;
+
+        // Second half: Fade out
+        while (elapsed < halfDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(elapsed / halfDuration);
+
+            foreach (Renderer rend in renderers)
+            {
+                if (!originalWallColors.ContainsKey(rend)) continue;
+
+                Color[] originalColors = originalWallColors[rend];
+                for (int i = 0; i < rend.materials.Length; i++)
+                {
+                    Color fromColor = highlightColor;
+                    Color toColor = (i < originalColors.Length) ? originalColors[i] : Color.white;
+                    Color lerpedColor = Color.Lerp(fromColor, toColor, t);
+
+                    if (rend.materials[i].HasProperty("_BaseColor"))
+                        rend.materials[i].SetColor("_BaseColor", lerpedColor);
+                    else
+                        rend.materials[i].color = lerpedColor;
+                }
+            }
+
+            yield return null;
+        }
+
+        highlightFadeCoroutine = null; // Clear coroutine reference when done
+    }
 
     void CreateCornerHighlights(GameObject wall)
     {
         if (wall == null) return;
 
-        // 🔥 Always clear old highlights first
-        foreach (GameObject pillar in currentCornerHighlights)
-        {
-            if (pillar != null)
-                Destroy(pillar);
-        }
-        currentCornerHighlights.Clear();
-
-        // 1. Get bounds
+        // 1. Get the original (non-scaled) bounds
         Bounds bounds = GetBounds(wall);
 
-        // 2. Corner positions
+        // 2. Define the 4 corner positions
         Vector3[] corners = new Vector3[4];
-        corners[0] = new Vector3(bounds.min.x, bounds.center.y, bounds.min.z);
-        corners[1] = new Vector3(bounds.max.x, bounds.center.y, bounds.min.z);
-        corners[2] = new Vector3(bounds.min.x, bounds.center.y, bounds.max.z);
-        corners[3] = new Vector3(bounds.max.x, bounds.center.y, bounds.max.z);
+        corners[0] = new Vector3(bounds.min.x, bounds.center.y, bounds.min.z); // Bottom Left
+        corners[1] = new Vector3(bounds.max.x, bounds.center.y, bounds.min.z); // Bottom Right
+        corners[2] = new Vector3(bounds.min.x, bounds.center.y, bounds.max.z); // Top Left
+        corners[3] = new Vector3(bounds.max.x, bounds.center.y, bounds.max.z); // Top Right
 
-        // 3. Create pillars
+        // 3. Create thin vertical cylinders at each corner
         foreach (Vector3 corner in corners)
         {
             GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             pillar.transform.SetParent(wall.transform);
             pillar.transform.position = corner;
-            pillar.transform.localScale = new Vector3(0.02f, bounds.size.y * 0.5f, 0.02f);
-            pillar.GetComponent<Renderer>().material.color = Color.yellow;
-            Destroy(pillar.GetComponent<Collider>());
+            pillar.transform.localScale = new Vector3(0.02f, bounds.size.y * 0.5f, 0.02f); // Thin and tall (half height up/down)
+            pillar.GetComponent<Renderer>().material.color = Color.yellow; // Color them yellow
+            Destroy(pillar.GetComponent<Collider>()); // Remove collider to avoid blocking
 
+            // 🔥 ADD this missing line
             currentCornerHighlights.Add(pillar);
         }
     }
 
-    void TryAssignWallFillSlider()
-    {
-        if (wallFillSlider == null)
-        {
-            GameObject spawnedMenu = GameObject.Find("SpawnedMenu");
-            if (spawnedMenu != null)
-            {
-                wallFillSlider = spawnedMenu.GetComponentInChildren<WallFillSlider>(true);
-                if (wallFillSlider != null)
-                    Debug.Log("✅ WallFillSlider re-assigned dynamically!");
-            }
-        }
-    }
 
 
     void OnHighlightWall(InputAction.CallbackContext ctx)
@@ -460,60 +359,70 @@ public class PrefabPlacer : MonoBehaviour
         if (!ctx.performed)
             return;
 
-        if (rayOrigin == null)
-        {
-            Debug.LogWarning("⚠️ No rayOrigin found, cannot highlight walls.");
-            return;
-        }
-
         Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
-        Debug.DrawRay(ray.origin, ray.direction * 10f, Color.yellow, 2f);
+        Debug.DrawRay(ray.origin, ray.direction * 1000f, Color.yellow, 2f);
 
         if (Physics.Raycast(ray, out RaycastHit hit, maxRayDistance, wallLayer))
         {
-            GameObject wall = hit.collider.transform.root.gameObject;
+            Transform root = hit.collider.transform.root;
+            GameObject wall = root.gameObject;
 
-            if (wall.layer != LayerMask.NameToLayer("Walls"))
+            if (selectedWall == wall)
             {
-                Debug.LogWarning("❌ Hit something that is NOT a wall!");
+                DeselectWall();
                 return;
             }
 
-            DeselectWall();
-            selectedWall = wall;
-
-            Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
-            if (renderers.Length == 0)
+            if (wall.layer == LayerMask.NameToLayer("Walls"))
             {
-                Debug.LogWarning("⚠️ No renderers found on selected wall.");
-                return;
-            }
+                DeselectWall(); // Clean up old selection first
 
-            // 🛑🛑🛑 FORCE MENU SWITCH HERE
-            if (prefabMenu != null)
+                selectedWall = wall;
+
+                Renderer[] renderers = wall.GetComponentsInChildren<Renderer>();
+                if (renderers.Length == 0)
+                {
+                    Debug.LogWarning("⚠️ No renderers found on selected wall.");
+                    return;
+                }
+
+                // Save original materials
+                originalWallMaterials.Clear();
+                foreach (Renderer rend in renderers)
+                {
+                    originalWallMaterials[rend] = rend.materials;
+                }
+
+                // 🔥 CREATE CORNER HIGHLIGHTS HERE
+                CreateCornerHighlights(selectedWall); // << Add this line here!
+
+                // Assign DripFillController
+                DripFillController dripFill = selectedWall.GetComponent<DripFillController>();
+                if (wallFillSlider != null)
+                {
+                    wallFillSlider.SetDripFillController(dripFill);
+                }
+                else
+                {
+                    Debug.LogWarning("⚠️ No WallFillSlider assigned in PrefabPlacer!");
+                }
+
+                if (ghostInstance != null)
+                    ghostInstance.SetActive(false);
+
                 prefabMenu.SetActive(false);
-
-            if (animationMenu != null)
                 animationMenu.SetActive(true);
 
-            // ✅ now continue
-            originalWallMaterials.Clear();
-            foreach (Renderer rend in renderers)
-            {
-                originalWallMaterials[rend] = rend.materials;
+                // ✅ Start highlight fading
+                if (highlightFadeCoroutine != null)
+                    StopCoroutine(highlightFadeCoroutine);
+
+                highlightFadeCoroutine = StartCoroutine(FlashHighlight(selectedWall));
             }
-
-            CreateCornerHighlights(selectedWall);
-
-            TryAssignWallFillSlider();
-            if (wallFillSlider != null)
+            else
             {
-                DripFillController dripFill = selectedWall.GetComponent<DripFillController>();
-                wallFillSlider.SetDripFillController(dripFill);
+                Debug.LogWarning("❌ Wall is NOT on 'Walls' layer. No animation menu shown.");
             }
-
-            if (ghostInstance != null)
-                ghostInstance.SetActive(false);
         }
         else
         {
@@ -522,20 +431,8 @@ public class PrefabPlacer : MonoBehaviour
     }
 
 
-
-
     private void DeselectWall()
     {
-        if (prefabMenu != null)
-            prefabMenu.SetActive(true);
-        else
-            Debug.LogWarning("⚠️ Prefab Menu missing!");
-
-        if (animationMenu != null)
-            animationMenu.SetActive(false);
-        else
-            Debug.LogWarning("⚠️ Animation Menu missing!");
-
         if (selectedWall != null)
         {
             // Restore original materials
@@ -565,8 +462,10 @@ public class PrefabPlacer : MonoBehaviour
         ClearGhost();
 
         // Also, clear the prefab selection so that the ghost is not recreated automatically.
-        if (spawnerRef != null)
-            spawnerRef.selectedPrefab = null;
+        spawnerRef.selectedPrefab = null;
+
+        prefabMenu.SetActive(true);
+        animationMenu.SetActive(false);
     }
 
 
@@ -634,22 +533,7 @@ public class PrefabPlacer : MonoBehaviour
         Destroy(ghostInstance);
         ghostInstance = null;
 
-        // Ensure prefab name is clean
-        string cleanPrefabName = spawnerRef.selectedPrefab.name.Replace("(Clone)", "").Trim();
-        Debug.Log("Attempting to instantiate prefab: " + cleanPrefabName);
-
-        GameObject placed = Normal.Realtime.Realtime.Instantiate(
-            cleanPrefabName,
-            finalPos,
-            finalRot,
-            ownedByClient: true,
-            preventOwnershipTakeover: false,
-            useInstance: GetComponent<Normal.Realtime.Realtime>()
-        );
-
-
-
-
+        GameObject placed = Instantiate(spawnerRef.selectedPrefab, finalPos, finalRot);
         placed.tag = "Ground";
 
         lastPlacedInstance = placed;
@@ -664,8 +548,6 @@ public class PrefabPlacer : MonoBehaviour
             controller.OnPlaced();
         }
     }
-
-
 
 
 
@@ -757,12 +639,11 @@ public class PrefabPlacer : MonoBehaviour
         if (!open)
         {
             ClearGhost();
+
+            if (visualRay != null)
+                visualRay.enabled = false; // << ADD THIS
         }
-
-        if (visualRay != null)
-            visualRay.enabled = open; // 🔥 Enable when menu open, disable otherwise
     }
-
 
 
 
@@ -908,20 +789,29 @@ public class PrefabPlacer : MonoBehaviour
             Debug.Log("Rotated ghost 90°");
         }
     }
-    public void UpdateVisualRay()
+    void UpdateVisualRay()
     {
-        if (visualRay == null || rayOrigin == null)
+        if (visualRay == null || rayOrigin == null || menuSpawnerRef == null)
             return;
 
-        // Always update the ray positions
-        Vector3 start = rayOrigin.position;
-        Vector3 end = start + rayOrigin.forward * rayLength;
+        // Only enable if the menu is actually visible
+        bool shouldEnableLaser = isMenuOpen && menuSpawnerRef.menuCanvas != null && menuSpawnerRef.menuCanvas.activeSelf;
 
-        visualRay.SetPosition(0, start);
-        visualRay.SetPosition(1, end);
+        if (visualRay.enabled != shouldEnableLaser)
+        {
+            visualRay.enabled = shouldEnableLaser;
+            visualRay.gameObject.SetActive(shouldEnableLaser);
+            Debug.LogWarning(shouldEnableLaser ? "🟢 Laser ENABLED" : "🔴 Laser DISABLED");
+        }
+
+        if (shouldEnableLaser)
+        {
+            Vector3 start = rayOrigin.position;
+            Vector3 end = start + rayOrigin.forward * rayLength;
+            visualRay.SetPosition(0, start);
+            visualRay.SetPosition(1, end);
+        }
     }
-
-
 
 
 }

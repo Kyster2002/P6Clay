@@ -21,10 +21,10 @@ public class WallFillSlider : MonoBehaviour
 
     void Update()
     {
-        if (fillSlider == null) return;  // 🔥 prevent crash if fillSlider not set
-
+        // Only update the slider's value if an object is selected.
         if (DripFillController.lastSelectedObject != null)
         {
+            // Update the slider's value without notifying its listeners.
             fillSlider.SetValueWithoutNotify(DripFillController.lastSelectedObject.FillLevel);
         }
         else
@@ -32,7 +32,6 @@ public class WallFillSlider : MonoBehaviour
             fillSlider.SetValueWithoutNotify(0f);
         }
     }
-
 
     public void UpdateFillAmount(float value)
     {
