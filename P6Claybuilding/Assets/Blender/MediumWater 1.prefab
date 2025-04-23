@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &3037368126889807431
+--- !u!1001 &3973286352266247626
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -16,7 +16,12 @@ PrefabInstance:
     - target: {fileID: -8444827248333881670, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
         type: 3}
       propertyPath: m_Name
-      value: MediumWater
+      value: MediumWater 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -2054891392032937966, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+        type: 3}
+      propertyPath: endTime
+      value: 16
       objectReference: {fileID: 0}
     - target: {fileID: -1678324700714204333, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
         type: 3}
@@ -90,34 +95,37 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8444827248333881670, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 10963563605136778}
+      addedObject: {fileID: 746954708536933721}
   m_SourcePrefab: {fileID: -582934006930739040, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
     type: 3}
---- !u!1 &2372012081870844157 stripped
+--- !u!1 &4462505100710527856 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8444827248333881670, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
     type: 3}
-  m_PrefabInstance: {fileID: 3037368126889807431}
+  m_PrefabInstance: {fileID: 3973286352266247626}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &10963563605136778
-Animator:
-  serializedVersion: 7
+--- !u!114 &746954708536933721
+MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2372012081870844157}
+  m_GameObject: {fileID: 4462505100710527856}
   m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 520dbd00708a51a4ca99ead8b0d4c0ca, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 761b6121874a21a4a89bd8ddd16feb4f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  streamPlayer: {fileID: 6077745996633396696}
+--- !u!114 &6077745996633396696 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: -2054891392032937966, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+    type: 3}
+  m_PrefabInstance: {fileID: 3973286352266247626}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4462505100710527856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6983ab2008f7a9f499b3f8cd6bec328d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

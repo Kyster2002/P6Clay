@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using System;
 using System.Collections;
+using TMPro;
 
 
 public class PrefabPlacer : MonoBehaviour
@@ -13,7 +14,11 @@ public class PrefabPlacer : MonoBehaviour
     public List<string> validSurfaceTags = new List<string>() { "Ground" };
 
     [Header("Highlight Settings")]
+    public float highlightYScaleMultiplier = 1.0f; // You can adjust this in the inspector
 
+    public TMP_Text wallToggleLabel;
+
+    [Header("Highlight Settings")]
     private float highlightDuration = 2f; // Duration of highlight fade in/out
     private Coroutine highlightFadeCoroutine;
     private List<GameObject> currentCornerHighlights = new List<GameObject>();
@@ -327,30 +332,133 @@ private void OnEnable()
     {
         if (wall == null) return;
 
-        // 1. Get the original (non-scaled) bounds
-        Bounds bounds = GetBounds(wall);
+        Transform meshRoot = FindDeepChild(wall.transform, "Box");
+        if (meshRoot == null) meshRoot = FindDeepChild(wall.transform, "Box_Closed");
 
-        // 2. Define the 4 corner positions
-        Vector3[] corners = new Vector3[4];
-        corners[0] = new Vector3(bounds.min.x, bounds.center.y, bounds.min.z); // Bottom Left
-        corners[1] = new Vector3(bounds.max.x, bounds.center.y, bounds.min.z); // Bottom Right
-        corners[2] = new Vector3(bounds.min.x, bounds.center.y, bounds.max.z); // Top Left
-        corners[3] = new Vector3(bounds.max.x, bounds.center.y, bounds.max.z); // Top Right
-
-        // 3. Create thin vertical cylinders at each corner
-        foreach (Vector3 corner in corners)
+        if (meshRoot == null)
         {
+            Debug.LogWarning($"❌ Could not find 'Box' or 'Box_Closed' on {wall.name}");
+            return;
+        }
+
+        MeshFilter meshFilter = meshRoot.GetComponent<MeshFilter>();
+        if (meshFilter == null || meshFilter.sharedMesh == null)
+        {
+            Debug.LogWarning($"❌ No MeshFilter or mesh found on {meshRoot.name}");
+            return;
+        }
+
+        Mesh mesh = meshFilter.sharedMesh;
+        Bounds meshBounds = mesh.bounds;
+        Transform meshTransform = meshFilter.transform;
+
+        Vector3[] localCorners = new Vector3[4];
+        float yBase = 0f; // Hardcoded base height in local wall space
+
+        localCorners[0] = new Vector3(meshBounds.min.x, yBase, meshBounds.min.z);
+        localCorners[1] = new Vector3(meshBounds.max.x, yBase, meshBounds.min.z);
+        localCorners[2] = new Vector3(meshBounds.min.x, yBase, meshBounds.max.z);
+        localCorners[3] = new Vector3(meshBounds.max.x, yBase, meshBounds.max.z);
+
+        // Calculate full-height of the box after scale is applied
+        float fullHeight = meshBounds.size.y * meshTransform.localScale.y;
+        float pillarHeight = fullHeight * 0.5f;
+
+        foreach (Vector3 localCorner in localCorners)
+        {
+            Vector3 worldPos = meshTransform.TransformPoint(localCorner);
+            Vector3 localToWall = wall.transform.InverseTransformPoint(worldPos);
+
             GameObject pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             pillar.transform.SetParent(wall.transform);
-            pillar.transform.position = corner;
-            pillar.transform.localScale = new Vector3(0.02f, bounds.size.y * 0.5f, 0.02f); // Thin and tall (half height up/down)
-            pillar.GetComponent<Renderer>().material.color = Color.yellow; // Color them yellow
-            Destroy(pillar.GetComponent<Collider>()); // Remove collider to avoid blocking
+            pillar.transform.localPosition = localToWall + new Vector3(0f, pillarHeight, 0f); // 🟡 Shift upward
+            pillar.transform.localScale = new Vector3(0.02f, pillarHeight, 0.02f);
 
-            // 🔥 ADD this missing line
+            pillar.GetComponent<Renderer>().material.color = Color.yellow;
+            Destroy(pillar.GetComponent<Collider>());
+
             currentCornerHighlights.Add(pillar);
         }
+
     }
+
+
+
+    private Transform FindDeepChild(Transform parent, string exactName)
+    {
+        foreach (Transform child in parent)
+        {
+            if (child.name == exactName)
+                return child;
+
+            Transform result = FindDeepChild(child, exactName);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+
+
+    public void ToggleWallBoxVersion()
+    {
+        if (selectedWall == null)
+        {
+            Debug.LogWarning("❌ No wall is currently selected to toggle.");
+            return;
+        }
+
+        Transform box = FindDeepChild(selectedWall.transform, "Box");
+        Transform boxClosed = FindDeepChild(selectedWall.transform, "Box_Closed");
+
+        if (box == null || boxClosed == null)
+        {
+            Debug.LogWarning("⚠️ Either 'Box' or 'Box_Closed' is missing under the selected wall.");
+            return;
+        }
+
+        bool boxIsActive = box.gameObject.activeSelf;
+        bool boxClosedIsActive = boxClosed.gameObject.activeSelf;
+
+        Debug.Log($"🧩 Before toggle: Box active = {boxIsActive}, Box_Closed active = {boxClosedIsActive}");
+
+        if (boxIsActive)
+        {
+            box.gameObject.SetActive(false);
+            boxClosed.gameObject.SetActive(true);
+        }
+        else if (boxClosedIsActive)
+        {
+            boxClosed.gameObject.SetActive(false);
+            box.gameObject.SetActive(true);
+        }
+        else
+        {
+            // Safety: if both are inactive, default to opening Box
+            box.gameObject.SetActive(true);
+            boxClosed.gameObject.SetActive(false);
+        }
+
+        DripFillController drip = selectedWall.GetComponent<DripFillController>();
+        if (drip != null)
+        {
+            drip.SetTargetBox(box.gameObject.activeSelf ? box : boxClosed);
+            if (drip.dripParticles != null)
+            {
+                drip.dripParticles.transform.SetParent(box.gameObject.activeSelf ? box : boxClosed, worldPositionStays: false);
+
+                drip.dripParticles.transform.localPosition = new Vector3(0, 0.5f, 0); // adjust if needed
+                drip.dripParticles.gameObject.SetActive(true);
+                Debug.Log("✅ Re-parented and re-activated dripParticles to match toggled box.");
+            }
+
+            Debug.Log("✅ Updated DripFillController to match toggled box.");
+        }
+
+        Debug.Log($"✅ After toggle: Box = {box.gameObject.activeSelf}, Box_Closed = {boxClosed.gameObject.activeSelf}");
+    }
+
+
 
 
 
@@ -394,7 +502,7 @@ private void OnEnable()
                 }
 
                 // 🔥 CREATE CORNER HIGHLIGHTS HERE
-                CreateCornerHighlights(selectedWall); // << Add this line here!
+                CreateCornerHighlights(selectedWall);
 
                 // Assign DripFillController
                 DripFillController dripFill = selectedWall.GetComponent<DripFillController>();
@@ -429,6 +537,8 @@ private void OnEnable()
             DeselectWall();
         }
     }
+
+
 
 
     private void DeselectWall()
@@ -469,7 +579,6 @@ private void OnEnable()
     }
 
 
-
     void SetupWallForFillSlider(GameObject wall)
     {
         if (wall == null || wallFillSlider == null) return;
@@ -485,6 +594,8 @@ private void OnEnable()
             Debug.LogWarning("⚠️ Selected wall has no DripFillController!");
         }
     }
+
+
 
     public void RestartSelectedWallDrip()
     {

@@ -69,128 +69,185 @@ public class AutoSetupPrefab : MonoBehaviour
     {
         Debug.Log($"🛠 Configuring: {obj.name}");
 
-        MeshRenderer firstRenderer = obj.GetComponentInChildren<MeshRenderer>();
+        DripFillController dripFill = obj.GetComponent<DripFillController>()
+                                     ?? obj.AddComponent<DripFillController>();
+        dripFill.SetupBucketPrefab(bucketPrefabAssetFromProject);
 
-        if (firstRenderer != null)
+        WallFillSlider wallFill = obj.GetComponent<WallFillSlider>()
+                               ?? obj.AddComponent<WallFillSlider>();
+
+        if (globalFillSlider != null)
         {
-            DripFillController dripFill = obj.GetComponent<DripFillController>() ?? obj.AddComponent<DripFillController>();
-            dripFill.SetupBucketPrefab(bucketPrefabAssetFromProject);
-            WallFillSlider wallFill = obj.GetComponent<WallFillSlider>() ?? obj.AddComponent<WallFillSlider>();
-
-            // Whitelist for naming check.
-            bool isBox = obj.name.Contains("Box") || firstRenderer.gameObject.name.Contains("Box");
-
-            if (isBox)
-            {
-                // Handle multiple materials correctly.
-                Material[] originalMaterials = firstRenderer.sharedMaterials; // Preserve all original materials
-                Material[] updatedMaterials = new Material[originalMaterials.Length];
-
-                for (int i = 0; i < originalMaterials.Length; i++)
-                {
-                    if (i == 0) // Only replace first material (or whichever index your Box material is)
-                    {
-                        Material newRippleMat = new Material(defaultRippleMaterial);
-
-                        // Copy color from the original material.
-                        if (originalMaterials[i].HasProperty("_BaseColor") && newRippleMat.HasProperty("_BaseColor"))
-                        {
-                            newRippleMat.SetColor("_BaseColor", originalMaterials[i].GetColor("_BaseColor"));
-
-                        }
-                        // Also apply clay textures
-                        ApplyTexturesToRippleMaterial(newRippleMat);
-
-
-                        updatedMaterials[i] = newRippleMat;
-
-                        dripFill.rippleMaterial = newRippleMat; // Save the ripple material.
-                    }
-                    else
-                    {
-                        updatedMaterials[i] = originalMaterials[i]; // Copy untouched materials.
-                    }
-                }
-
-                firstRenderer.materials = updatedMaterials; // Reapply materials array.
-            }
-
-            // Assign global slider.
-            if (globalFillSlider != null)
-            {
-                wallFill.fillSlider = globalFillSlider;
-                wallFill.selectedDripFillController = dripFill;
-            }
-            else
-            {
-                Debug.LogWarning("⚠ Global Fill Slider not assigned in AutoSetupPrefab!");
-            }
-
-            // Setup the particle system on this prefab.
-            SetupParticleSystem(obj, dripFill);
-
-            // ================================
-            // INSERT THE CONFIGURATION SNIPPET HERE:
-            DripFillController dfc = obj.GetComponent<DripFillController>();
-            if (dfc != null)
-            {
-                dfc.ConfigureDripParticleController();
-            }
-            // ================================
+            wallFill.fillSlider = globalFillSlider;
+            wallFill.selectedDripFillController = dripFill;
         }
         else
         {
-            Debug.Log($"⚠ Skipping {obj.name} - It appears to be a particle system.");
+            Debug.LogWarning("⚠ Global Fill Slider not assigned in AutoSetupPrefab!");
+        }
+
+        // Apply ripple and particle to BOTH Box and Box_Closed
+        SetupBoxVariants(obj, dripFill);
+
+        // Find and force "Box_Closed" as the default box
+        Transform boxClosed = FindDeepChild(obj.transform, "Box_Closed");
+        if (boxClosed != null)
+        {
+            dripFill.SetTargetBox(boxClosed);
+            dripFill.SetFillLevel(0f);
+
+            // ✅ Explicitly assign the correct particle system from the "Box_Closed" hierarchy
+            ParticleSystem closedBoxParticles = boxClosed.GetComponentInChildren<ParticleSystem>(true);
+            if (closedBoxParticles != null)
+            {
+                dripFill.dripParticles = closedBoxParticles;
+                Debug.Log("✅ Assigned dripParticles from Box_Closed.");
+            }
+            else
+            {
+                Debug.LogWarning("⚠ No particle system found under Box_Closed.");
+            }
+
+            dripFill.UpdateDripEffect(); // 💥 This ensures ripple shader + scaling are applied
+        }
+        else
+        {
+            Debug.LogWarning("⚠ 'Box_Closed' not found during setup.");
         }
 
         Debug.Log($"✔ {obj.name} - Fully Configured.");
     }
 
-    void SetupParticleSystem(GameObject obj, DripFillController dripFill)
+
+
+    void SetupBoxVariants(GameObject wall, DripFillController dripFill)
     {
-        if (particleSystemPrefab == null)
-        {
-            Debug.LogError($"❌ {obj.name} - Particle system prefab is missing! Assign it in the Inspector.");
-            return;
-        }
+        string[] targets = { "Box", "Box_Closed" };
 
-        if (dripFill.dripParticles != null)
+        foreach (string name in targets)
         {
-            Debug.Log($"✔ {obj.name} - Using existing Particle System.");
-            return;
-        }
+            Transform box = FindDeepChild(wall.transform, name);
+            if (box == null)
+            {
+                Debug.LogWarning($"⚠ Could not find {name} on {wall.name}");
+                continue;
+            }
 
-        // Place the particle system on top of the Box child if possible.
-        Transform boxTransform = FindDeepChild(obj.transform, "Box");
-        if (boxTransform != null)
-        {
-            ParticleSystem newParticles = Instantiate(particleSystemPrefab, boxTransform);
-            newParticles.transform.localPosition = new Vector3(0, 0.5f, 0); // Tweak offset as needed.
-            newParticles.transform.localRotation = Quaternion.identity;
-            newParticles.transform.localScale = Vector3.one; // Ensure no unwanted scaling.
+            // Ripple material setup
+            MeshRenderer meshRenderer = box.GetComponent<MeshRenderer>();
+            if (meshRenderer != null)
+            {
+                bool isWhitelisted = false;
+                foreach (string allowed in allowedNames)
+                {
+                    if (box.name.Contains(allowed))
+                    {
+                        isWhitelisted = true;
+                        break;
+                    }
+                }
 
-            dripFill.dripParticles = newParticles;
-            newParticles.gameObject.SetActive(false);
+                if (isWhitelisted)
+                {
+                    Material[] originalMaterials = meshRenderer.sharedMaterials;
+                    Material[] updatedMaterials = new Material[originalMaterials.Length];
 
-            Debug.Log($"✨ {obj.name} - Added Particle System above Box.");
-        }
-        else
-        {
-            Debug.LogWarning($"⚠️ {obj.name} - Could not find Box child to parent Particle System to.");
+                    for (int i = 0; i < originalMaterials.Length; i++)
+                    {
+                        if (i == 0)
+                        {
+                            Material newRippleMat = new Material(defaultRippleMaterial);
+
+                            if (originalMaterials[i].HasProperty("_BaseColor") && newRippleMat.HasProperty("_BaseColor"))
+                            {
+                                newRippleMat.SetColor("_BaseColor", originalMaterials[i].GetColor("_BaseColor"));
+                            }
+
+                            ApplyTexturesToRippleMaterial(newRippleMat);
+                            updatedMaterials[i] = newRippleMat;
+
+                            // First matching box sets rippleMaterial
+                            if (dripFill.rippleMaterial == null)
+                                dripFill.rippleMaterial = newRippleMat;
+                        }
+                        else
+                        {
+                            updatedMaterials[i] = originalMaterials[i];
+                        }
+                    }
+
+                    meshRenderer.materials = updatedMaterials;
+                }
+            }
+
+            // Particle system setup
+            if (particleSystemPrefab != null && box.GetComponentInChildren<ParticleSystem>() == null)
+            {
+                ParticleSystem newParticles = Instantiate(particleSystemPrefab, box);
+                newParticles.transform.localPosition = new Vector3(0, 0.5f, 0);
+                newParticles.transform.localRotation = Quaternion.identity;
+                newParticles.transform.localScale = Vector3.one;
+                newParticles.gameObject.SetActive(false);
+
+                // First valid assignment
+                if (dripFill.dripParticles == null)
+                    dripFill.dripParticles = newParticles;
+
+                Debug.Log($"✨ Particle system added to {name}");
+            }
         }
     }
 
-    // Helper method to find a child recursively.
-    Transform FindDeepChild(Transform parent, string name)
+
+    void SetupParticleSystems(GameObject wall, DripFillController dripFill)
+    {
+        if (particleSystemPrefab == null)
+        {
+            Debug.LogError("❌ Particle system prefab is missing!");
+            return;
+        }
+
+        string[] boxNames = { "Box", "Box_Closed" };
+
+        foreach (string boxName in boxNames)
+        {
+            Transform boxTransform = FindDeepChild(wall.transform, boxName);
+            if (boxTransform == null)
+            {
+                Debug.LogWarning($"⚠ Could not find {boxName} on {wall.name}");
+                continue;
+            }
+
+            bool alreadyHasParticle = boxTransform.GetComponentInChildren<ParticleSystem>(true);
+            if (alreadyHasParticle) continue;
+
+            ParticleSystem newParticles = Instantiate(particleSystemPrefab, boxTransform);
+            newParticles.transform.localPosition = new Vector3(0, 0.5f, 0);
+            newParticles.transform.localRotation = Quaternion.identity;
+            newParticles.transform.localScale = Vector3.one;
+            newParticles.gameObject.SetActive(false);
+
+            if (dripFill.dripParticles == null)
+                dripFill.dripParticles = newParticles;
+
+            Debug.Log($"✨ Particle system added to {boxName}");
+        }
+    }
+
+
+
+    Transform FindDeepChild(Transform parent, string exactName)
     {
         foreach (Transform child in parent)
         {
-            if (child.name.Contains(name))
+            if (child.name == exactName)
                 return child;
-            Transform result = FindDeepChild(child, name);
+
+            Transform result = FindDeepChild(child, exactName);
             if (result != null)
                 return result;
         }
         return null;
     }
+
 }
