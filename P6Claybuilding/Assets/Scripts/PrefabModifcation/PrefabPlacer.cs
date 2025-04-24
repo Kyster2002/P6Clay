@@ -408,55 +408,69 @@ private void OnEnable()
             return;
         }
 
+        // Find both variants
         Transform box = FindDeepChild(selectedWall.transform, "Box");
         Transform boxClosed = FindDeepChild(selectedWall.transform, "Box_Closed");
-
         if (box == null || boxClosed == null)
         {
             Debug.LogWarning("⚠️ Either 'Box' or 'Box_Closed' is missing under the selected wall.");
             return;
         }
 
-        bool boxIsActive = box.gameObject.activeSelf;
-        bool boxClosedIsActive = boxClosed.gameObject.activeSelf;
+        bool wasBoxActive = box.gameObject.activeSelf;
+        bool wasBoxClosedActive = boxClosed.gameObject.activeSelf;
+        Debug.Log($"🧩 Before toggle: Box active = {wasBoxActive}, Box_Closed active = {wasBoxClosedActive}");
 
-        Debug.Log($"🧩 Before toggle: Box active = {boxIsActive}, Box_Closed active = {boxClosedIsActive}");
-
-        if (boxIsActive)
+        // Decide which one to activate
+        Transform newTarget = null;
+        if (wasBoxActive)
         {
             box.gameObject.SetActive(false);
             boxClosed.gameObject.SetActive(true);
+            newTarget = boxClosed;
         }
-        else if (boxClosedIsActive)
+        else if (wasBoxClosedActive)
         {
             boxClosed.gameObject.SetActive(false);
             box.gameObject.SetActive(true);
+            newTarget = box;
         }
         else
         {
-            // Safety: if both are inactive, default to opening Box
+            // fallback
             box.gameObject.SetActive(true);
             boxClosed.gameObject.SetActive(false);
+            newTarget = box;
         }
 
+        // Get your DripFillController
         DripFillController drip = selectedWall.GetComponent<DripFillController>();
         if (drip != null)
         {
-            drip.SetTargetBox(box.gameObject.activeSelf ? box : boxClosed);
+            // 1) Preserve the current fill fraction
+            float previousFill = drip.FillLevel;
+
+            // 2) Switch the target box (this resets boxTransform & originalScale)
+            drip.SetTargetBox(newTarget);
+
+            // 3) Restore the fill fraction on the new box
+            drip.SetFillLevel(previousFill);
+
+            // 4) Re-parent your particles if needed
             if (drip.dripParticles != null)
             {
-                drip.dripParticles.transform.SetParent(box.gameObject.activeSelf ? box : boxClosed, worldPositionStays: false);
-
-                drip.dripParticles.transform.localPosition = new Vector3(0, 0.5f, 0); // adjust if needed
+                drip.dripParticles.transform.SetParent(newTarget, worldPositionStays: false);
+                drip.dripParticles.transform.localPosition = new Vector3(0, 0.5f, 0);
                 drip.dripParticles.gameObject.SetActive(true);
-                Debug.Log("✅ Re-parented and re-activated dripParticles to match toggled box.");
+                Debug.Log("✅ Re-parented and re-activated dripParticles on the new box.");
             }
 
-            Debug.Log("✅ Updated DripFillController to match toggled box.");
+            Debug.Log("✅ Updated DripFillController to match toggled box with preserved fill.");
         }
 
         Debug.Log($"✅ After toggle: Box = {box.gameObject.activeSelf}, Box_Closed = {boxClosed.gameObject.activeSelf}");
     }
+
 
 
 

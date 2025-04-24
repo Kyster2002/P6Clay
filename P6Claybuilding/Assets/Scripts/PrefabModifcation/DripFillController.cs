@@ -2,6 +2,7 @@
 using UnityEngine.EventSystems;
 using System.Collections;
 using UnityEngine.Formats.Alembic.Importer;
+using System.Collections.Generic;
 
 public class DripFillController : MonoBehaviour, IPointerClickHandler
 {
@@ -44,7 +45,8 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     private bool forceVisible = false; // When false, the Box remains hidden at low fill
     private static int bucketSpawnIndex = 0;  // Used to track rotation correction
     private int bucketRotationPhase = -1; // -1 means uninitialized
-
+    private Dictionary<string, Vector3> _initialScales = new Dictionary<string, Vector3>();
+    private Dictionary<string, Vector3> _initialPositions = new Dictionary<string, Vector3>();
 
     // -- SHADER PROPERTY IDs --
     private static readonly int _FillAmount = Shader.PropertyToID("_FillAmount");
@@ -59,6 +61,24 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     {
         get { return currentFillLevel; }
     }
+
+    void Awake()
+    {
+        // Record the *unmodified* full scale/position for both variants once
+        var box = FindDeepChild(transform, "Box");
+        var boxClosed = FindDeepChild(transform, "Box_Closed");
+        if (box != null)
+        {
+            _initialScales["Box"] = box.localScale;
+            _initialPositions["Box"] = box.localPosition;
+        }
+        if (boxClosed != null)
+        {
+            _initialScales["Box_Closed"] = boxClosed.localScale;
+            _initialPositions["Box_Closed"] = boxClosed.localPosition;
+        }
+    }
+
     void Start()
     {
         // ✅ Only run setup if SetTargetBox() hasn’t already been called
@@ -457,12 +477,23 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
 
         if (boxRenderer != null)
         {
-            originalScale = boxTransform.localScale;
-            originalPosition = boxTransform.localPosition;
+            // 2) Pull the *true* full scale & position from our cache
+            string key = box.name;
+            if (_initialScales.TryGetValue(key, out var fullScale))
+                originalScale = fullScale;
+            else
+                originalScale = boxTransform.localScale;  // fallback
 
+            if (_initialPositions.TryGetValue(key, out var fullPos))
+                originalPosition = fullPos;
+            else
+                originalPosition = boxTransform.localPosition;
+
+            // reconfigure the ripple material height
             rippleMaterial = boxRenderer.material;
             rippleMaterial.SetFloat(_ObjectHeight, originalScale.y);
 
+            // reset fill
             isDripping = false;
             animateWobble = false;
             currentFillLevel = 0f;
@@ -471,8 +502,5 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             boxRenderer.enabled = false;
         }
     }
-
-
-
 
 }
