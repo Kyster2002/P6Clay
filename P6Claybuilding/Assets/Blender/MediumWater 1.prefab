@@ -23,6 +23,11 @@ PrefabInstance:
       propertyPath: endTime
       value: 16
       objectReference: {fileID: 0}
+    - target: {fileID: -2054891392032937966, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+        type: 3}
+      propertyPath: startTime
+      value: 1.8
+      objectReference: {fileID: 0}
     - target: {fileID: -1678324700714204333, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
         type: 3}
       propertyPath: m_LocalRotation.z
@@ -37,6 +42,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Mesh
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6377779223325260275, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6377779223325260275, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6377779223325260275, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6377779223325260275, guid: 1e83e80b3e20b8847865ee0c7c0a881a,
         type: 3}

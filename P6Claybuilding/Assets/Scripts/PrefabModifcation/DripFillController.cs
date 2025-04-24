@@ -14,10 +14,10 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public float fillStartDelay = 1.5f; // 🛠️ Adjustable delay before filling starts
 
     [Header("Bucket Offsets Per Rotation Phase (Y is always height)")]
-    public Vector3 offsetPhase0 = new Vector3(0f, 0.4f, 0.22f);
-    public Vector3 offsetPhase90 = new Vector3(0f, 0.4f, 0.2f);
-    public Vector3 offsetPhase180 = new Vector3(0f, 0.5f, -0.2f);
-    public Vector3 offsetPhase270 = new Vector3(0f, 0.4f, -0.22f);
+    public Vector3 offsetPhase0 = new Vector3(0f, 0.3f, 0.18f);
+    public Vector3 offsetPhase90 = new Vector3(0f, 0.3f, 0.18f);
+    public Vector3 offsetPhase180 = new Vector3(0f, 0.3f, -0.18f);
+    public Vector3 offsetPhase270 = new Vector3(0f, 0.3f, -0.18f);
 
     [Header("Particle Offsets Per Rotation Phase (Y is height)")]
     public Vector3 particleOffsetPhase0 = new Vector3(-0.01f, 0.35f, 0f);
