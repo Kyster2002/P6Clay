@@ -688,7 +688,7 @@ MonoBehaviour:
   placementLayers:
     serializedVersion: 2
     m_Bits: 1536
-  gridSize: 0.21
+  gridSize: 0.22
   ghostMaterial: {fileID: 2100000, guid: 70b0c12a539866a4fab75a0394395e26, type: 2}
   ghostSmoothSpeed: 15
   isMenuOpen: 1

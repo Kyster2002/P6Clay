@@ -2,50 +2,71 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 
+/// <summary>
+/// PrefabButtonSpawner: Dynamically configures a set of UI buttons so that
+/// each button represents a spawnable prefab. Clicking a button sets the
+/// selectedPrefab and refreshes the ghost preview in the scene.
+/// </summary>
 public class PrefabButtonSpawner : MonoBehaviour
 {
     [System.Serializable]
     public class SpawnableItem
     {
-        public GameObject prefab; // The prefab to be selected
-        public Sprite icon;       // The sprite to assign to the button
+        /// <summary>The prefab GameObject that will be instantiated when selected.</summary>
+        public GameObject prefab;
+        /// <summary>The icon to display on the corresponding UI button.</summary>
+        public Sprite icon;
     }
 
     [Header("UI References")]
-    public Button[] menuButtons; // Set these in the inspector (four buttons in your case)
+    /// <summary>
+    /// Array of UI Buttons in the menu. Must match the length of spawnableItems.
+    /// </summary>
+    public Button[] menuButtons;
 
     [Header("Spawnable Items")]
-    public SpawnableItem[] spawnableItems; // Should have the same number of elements as menuButtons
+    /// <summary>
+    /// Array of SpawnableItem entries. Each entry pairs a prefab with its icon.
+    /// </summary>
+    public SpawnableItem[] spawnableItems;
 
-    // This will hold the prefab you choose
+    /// <summary>
+    /// The prefab most recently chosen by clicking one of the buttons.
+    /// Other scripts (e.g. PrefabPlacer) will read this to know what to spawn.
+    /// </summary>
     [HideInInspector] public GameObject selectedPrefab;
 
+    /// <summary>
+    /// Unity Start callback: sets up each button’s image and click behavior.
+    /// Ensures the arrays are the same length, then for each index:
+    ///  1) assigns the icon to the button’s Image,
+    ///  2) clears existing onClick listeners,
+    ///  3) adds a new listener that sets selectedPrefab, refreshes the ghost,
+    ///     and logs the selection.
+    /// </summary>
     private void Start()
     {
-        // Check if both arrays have the same length
+        // Ensure number of buttons matches number of spawnable items
         if (menuButtons.Length != spawnableItems.Length)
         {
             Debug.LogError("Number of menu buttons and spawnable items must be equal.");
             return;
         }
 
-        // Iterate over each button and assign the correct listener and icon
+        // Loop over each button/item pair
         for (int i = 0; i < menuButtons.Length; i++)
         {
-            int index = i; // Capture index for the lambda expression
+            int index = i;  // Capture loop variable for the lambda
+            Button button = menuButtons[index];
+            SpawnableItem item = spawnableItems[index];
 
-            // Get the button reference
-            Button button = menuButtons[i];
-            // Get the corresponding spawnable item
-            SpawnableItem item = spawnableItems[i];
-
-            // Set the button's image to match the spawnable item's icon
+            // Set the button icon if available
             Image img = button.GetComponentInChildren<Image>();
             if (img != null && item.icon != null)
             {
                 img.sprite = item.icon;
 
-                // Optionally adjust aspect ratio, size, etc.
+                // Optionally adjust button size to match icon aspect ratio
                 float aspectRatio = item.icon.rect.width / item.icon.rect.height;
                 float baseHeight = 100f;
                 float width = baseHeight * aspectRatio;
@@ -54,15 +75,15 @@ public class PrefabButtonSpawner : MonoBehaviour
                     rt.sizeDelta = new Vector2(width, baseHeight);
             }
 
-            // Remove any pre-existing listeners (optional, but good for hygiene)
+            // Remove any old onClick handlers to avoid duplicates
             button.onClick.RemoveAllListeners();
 
-            // Add the click event listener
+            // Add a new onClick listener for this prefab
             button.onClick.AddListener(() =>
             {
-                // When the button is clicked, set the selected prefab
+                // Set the globally selected prefab
                 selectedPrefab = item.prefab;
-                // Optionally, update any preview or placement logic
+                // Find the PrefabPlacer instance in the scene and refresh the ghost preview
                 FindObjectOfType<PrefabPlacer>()?.ForceRefreshGhost();
                 Debug.Log($"Selected prefab: {item.prefab.name}");
             });

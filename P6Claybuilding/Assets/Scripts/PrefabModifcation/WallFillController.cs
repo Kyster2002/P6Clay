@@ -1,15 +1,32 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
+/// <summary>
+/// WallFillSlider: Bridges the UI Slider with the DripFillController on the
+/// currently selected wall. Updates the slider to match fill level and
+/// invokes fill or drip animations when buttons are pressed.
+/// </summary>
 public class WallFillSlider : MonoBehaviour
 {
-    public Slider fillSlider;  // Assign your global slider in the Inspector.
+    [Header("UI References")]
+    /// <summary>
+    /// Reference to the UI Slider used for controlling the fill amount.
+    /// </summary>
+    public Slider fillSlider;
+
+    /// <summary>
+    /// (Unused directly) Can be set by other scripts to change the selection.
+    /// </summary>
     public DripFillController selectedDripFillController;
 
+    /// <summary>
+    /// Called once when this component awakens. Sets up the slider callback.
+    /// </summary>
     void Start()
     {
         if (fillSlider != null)
         {
+            // Ensure no duplicate listeners, then hook our UpdateFillAmount method.
             fillSlider.onValueChanged.RemoveAllListeners();
             fillSlider.onValueChanged.AddListener(UpdateFillAmount);
         }
@@ -19,20 +36,28 @@ public class WallFillSlider : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Called every frame. Keeps the UI slider in sync with the selected wall’s fill.
+    /// </summary>
     void Update()
     {
-        // Only update the slider's value if an object is selected.
+        // If there’s a selected DripFillController, mirror its FillLevel to the slider.
         if (DripFillController.lastSelectedObject != null)
         {
-            // Update the slider's value without notifying its listeners.
+            // Set the slider value silently (no callback) to avoid feedback loops.
             fillSlider.SetValueWithoutNotify(DripFillController.lastSelectedObject.FillLevel);
         }
         else
         {
+            // No selection means slider resets to zero.
             fillSlider.SetValueWithoutNotify(0f);
         }
     }
 
+    /// <summary>
+    /// Callback invoked when the slider value changes. Updates the fill level on the wall.
+    /// </summary>
+    /// <param name="value">New slider value between 0 and 1.</param>
     public void UpdateFillAmount(float value)
     {
         if (DripFillController.lastSelectedObject != null)
@@ -45,6 +70,9 @@ public class WallFillSlider : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Invoked by a UI Button to restart the dripping fill animation.
+    /// </summary>
     public void StartDripFill()
     {
         if (DripFillController.lastSelectedObject != null)
@@ -57,6 +85,9 @@ public class WallFillSlider : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Invoked by a UI Button to run the smooth (no-drip) fill animation.
+    /// </summary>
     public void StartSmoothFill()
     {
         if (DripFillController.lastSelectedObject != null)
@@ -69,7 +100,11 @@ public class WallFillSlider : MonoBehaviour
         }
     }
 
-    // This method is provided so other scripts can set the global selection.
+    /// <summary>
+    /// Allows external scripts (e.g., PrefabPlacer) to set which wall’s
+    /// DripFillController the slider should drive.
+    /// </summary>
+    /// <param name="newController">The DripFillController to control.</param>
     public void SetDripFillController(DripFillController newController)
     {
         DripFillController.lastSelectedObject = newController;
