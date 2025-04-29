@@ -128,6 +128,15 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
+                    ""name"": ""ReverseRotate"",
+                    ""type"": ""Button"",
+                    ""id"": ""89bdd3c6-e18f-4f1d-977a-ad862c687f0e"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
                     ""name"": ""Select"",
                     ""type"": ""Button"",
                     ""id"": ""5cb896b8-2a85-462d-9ffd-43a9571b9d89"",
@@ -174,7 +183,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""4db35b5f-c40c-4acc-87db-91c652240b0e"",
-                    ""path"": ""<XRController>{RightHand}/{SecondaryButton}"",
+                    ""path"": ""<XRController>{RightHand}/{TriggerButton}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -192,6 +201,17 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                     ""action"": ""Select"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""43fc59ee-c436-446e-b844-58ac4761f7fc"",
+                    ""path"": ""<XRController>{RightHand}/{GripButton}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ReverseRotate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -204,6 +224,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         m_Main_LeftSet = m_Main.FindAction("LeftSet", throwIfNotFound: true);
         m_Main_leftDelete = m_Main.FindAction("leftDelete", throwIfNotFound: true);
         m_Main_Rotate = m_Main.FindAction("Rotate", throwIfNotFound: true);
+        m_Main_ReverseRotate = m_Main.FindAction("ReverseRotate", throwIfNotFound: true);
         m_Main_Select = m_Main.FindAction("Select", throwIfNotFound: true);
     }
 
@@ -289,6 +310,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
     private readonly InputAction m_Main_LeftSet;
     private readonly InputAction m_Main_leftDelete;
     private readonly InputAction m_Main_Rotate;
+    private readonly InputAction m_Main_ReverseRotate;
     private readonly InputAction m_Main_Select;
     /// <summary>
     /// Provides access to input actions defined in input action map "Main".
@@ -317,6 +339,10 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Main/Rotate".
         /// </summary>
         public InputAction @Rotate => m_Wrapper.m_Main_Rotate;
+        /// <summary>
+        /// Provides access to the underlying input action "Main/ReverseRotate".
+        /// </summary>
+        public InputAction @ReverseRotate => m_Wrapper.m_Main_ReverseRotate;
         /// <summary>
         /// Provides access to the underlying input action "Main/Select".
         /// </summary>
@@ -359,6 +385,9 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
             @Rotate.started += instance.OnRotate;
             @Rotate.performed += instance.OnRotate;
             @Rotate.canceled += instance.OnRotate;
+            @ReverseRotate.started += instance.OnReverseRotate;
+            @ReverseRotate.performed += instance.OnReverseRotate;
+            @ReverseRotate.canceled += instance.OnReverseRotate;
             @Select.started += instance.OnSelect;
             @Select.performed += instance.OnSelect;
             @Select.canceled += instance.OnSelect;
@@ -385,6 +414,9 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
             @Rotate.started -= instance.OnRotate;
             @Rotate.performed -= instance.OnRotate;
             @Rotate.canceled -= instance.OnRotate;
+            @ReverseRotate.started -= instance.OnReverseRotate;
+            @ReverseRotate.performed -= instance.OnReverseRotate;
+            @ReverseRotate.canceled -= instance.OnReverseRotate;
             @Select.started -= instance.OnSelect;
             @Select.performed -= instance.OnSelect;
             @Select.canceled -= instance.OnSelect;
@@ -456,6 +488,13 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRotate(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ReverseRotate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnReverseRotate(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Select" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

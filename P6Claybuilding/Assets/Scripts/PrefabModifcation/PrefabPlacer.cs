@@ -40,6 +40,7 @@ public class PrefabPlacer : MonoBehaviour
     public InputActionReference placeAction;
     public InputActionReference undoAction;
     public InputActionReference rotateAction;
+    public InputActionReference rotateReverseAction;
     public InputActionReference highlightAction;
 
     [Header("Placement Settings")]
@@ -97,6 +98,11 @@ public class PrefabPlacer : MonoBehaviour
     // Quaternion storing the ghost’s manual rotation state.
     private Quaternion manualRotation = Quaternion.identity;
 
+    /// <summary>
+    /// 0–3 = upright (0°,90°,180°,270° around Y)
+    /// 4–7 = laid flat (tilted 90° on X, then yawed 0°,90°,180°,270°)
+    /// </summary>
+    private int rotatePhase = 0;
 
     [Header("Visual Ray")]
     // LineRenderer used to display a laser pointer.
@@ -113,6 +119,7 @@ public class PrefabPlacer : MonoBehaviour
         placeAction.action.performed += OnPlace;
         undoAction.action.performed += OnUndo;
         rotateAction.action.performed += OnRotate;
+        rotateReverseAction.action.performed += OnRotateReverse;
         highlightAction.action.performed += OnHighlightWall;
     }
 
@@ -125,6 +132,7 @@ public class PrefabPlacer : MonoBehaviour
         placeAction.action.performed -= OnPlace;
         undoAction.action.performed -= OnUndo;
         rotateAction.action.performed -= OnRotate;
+        rotateReverseAction.action.performed += OnRotateReverse;
         highlightAction.action.performed -= OnHighlightWall; // ensure highlight unhooked
     }
 
@@ -155,64 +163,14 @@ public class PrefabPlacer : MonoBehaviour
     /// Called every frame. Updates the laser pointer, manages the ghost preview and rotation input,
     /// and handles quick-triggered place and rotate actions.
     /// </summary>
-    private void Update()
+    void Update()
     {
-        // Handle per-frame updates: ray visibility, ghost preview, rotation logic.
         UpdateVisualRay();
         HandleGhostPreview();
-        HandleRotationInput();
 
-        // Track how long the rotate button has been held down.
-        if (rotateAction != null && rotateAction.action.IsPressed())
-        {
-            rotateTimer += Time.deltaTime;
-
-            // After hold threshold, automatically lay the ghost flat.
-            if (rotateTimer >= rotationHoldTime && !hasLaidDown)
-            {
-                hasLaidDown = true;
-                if (ghostInstance != null)
-                {
-                    Vector3 forward = ghostInstance.transform.forward;
-                    Vector3 right = ghostInstance.transform.right;
-
-                    // Choose the axis most aligned with up/down to lay the ghost flat.
-                    Vector3 layDownAxis = Mathf.Abs(Vector3.Dot(forward, Vector3.up)) > Mathf.Abs(Vector3.Dot(right, Vector3.up))
-                        ? forward
-                        : right;
-
-                    // Compute rotation that flattens along the chosen axis.
-                    manualRotation = Quaternion.LookRotation(
-                        Vector3.ProjectOnPlane(layDownAxis, Vector3.up),
-                        Vector3.up
-                    );
-                }
-            }
-        }
-        else if (rotateAction != null && rotateAction.action.WasReleasedThisFrame())
-        {
-            // If rotate button released before laying down, apply a quick 90° turn.
-            if (!hasLaidDown)
-            {
-                manualRotation *= Quaternion.Euler(0, 90, 0);
-            }
-
-            // Reset timers and flags for next hold.
-            rotateTimer = 0f;
-            hasLaidDown = false;
-        }
-
-        // Debug log if place action fires here (often handled in OnPlace).
-        if (placeAction != null && placeAction.action.triggered)
-        {
+        // (optional) log place trigger, but remove rotate in Update entirely:
+        if (placeAction.action.triggered)
             Debug.Log("Place action triggered in Update()");
-        }
-
-        // Also allow rotateAction.triggered to rotate instantly.
-        if (rotateAction != null && rotateAction.action.triggered)
-        {
-            ghostInstance.transform.Rotate(Vector3.up, 90f);
-        }
     }
 
     /// <summary>
@@ -223,12 +181,53 @@ public class PrefabPlacer : MonoBehaviour
     {
         if (ghostInstance == null) return;
 
-        // Rotate the ghost 90° around world Y axis in response to the input event.
-        ghostInstance.transform.Rotate(Vector3.up, 90f, Space.World);
+        // advance and wrap
+        rotatePhase = (rotatePhase + 1) % 8;
 
-        // Store the new rotation so it persists in Update().
-        manualRotation = ghostInstance.transform.rotation;
-        Debug.Log("Rotated 90° via .performed");
+        if (rotatePhase < 4)
+        {
+            // upright: yaw only
+            float yaw = rotatePhase * 90f;
+            manualRotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+        else
+        {
+            // laid flat: tilt 90° on X, then yaw
+            float yaw = (rotatePhase - 4) * 90f;
+            manualRotation = Quaternion.Euler(0f, yaw, 90f);
+        }
+
+        // apply and remember
+        ghostInstance.transform.rotation = manualRotation;
+        Debug.Log($"Rotate phase {rotatePhase}: {manualRotation.eulerAngles}");
+    }
+
+        /// <summary>
+    /// Backwards through 0–7.
+    /// </summary>
+    void OnRotateReverse(InputAction.CallbackContext ctx)
+    {
+        if (ghostInstance == null) return;
+
+        // subtract 1 mod 8
+        rotatePhase = (rotatePhase + 7) % 8;
+
+        float yaw;
+        if (rotatePhase < 4)
+        {
+            // upright
+            yaw = rotatePhase * 90f;
+            manualRotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+        else
+        {
+            // flat
+            yaw = (rotatePhase - 4) * 90f;
+            manualRotation = Quaternion.Euler(0f, yaw, 90f);
+        }
+
+        ghostInstance.transform.rotation = manualRotation;
+        Debug.Log($"Reverse rotate → phase {rotatePhase}: {manualRotation.eulerAngles}");
     }
 
     /// <summary>
@@ -773,13 +772,15 @@ public class PrefabPlacer : MonoBehaviour
         placedObjects.Add(placed);
         manualRotation = finalRot;
 
-        // Disable dripping/particles once placed
+        // Set rotation phase for DripFillController
         DripFillController controller = placed.GetComponent<DripFillController>();
         if (controller != null)
         {
+            
             controller.OnPlaced();
         }
     }
+
 
     /// <summary>
     /// Handles the undo action: if a wall is selected, destroys it and cleans up.

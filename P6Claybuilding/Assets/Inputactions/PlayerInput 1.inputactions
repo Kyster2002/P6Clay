@@ -42,6 +42,15 @@
                     "initialStateCheck": false
                 },
                 {
+                    "name": "ReverseRotate",
+                    "type": "Button",
+                    "id": "89bdd3c6-e18f-4f1d-977a-ad862c687f0e",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
                     "name": "Select",
                     "type": "Button",
                     "id": "5cb896b8-2a85-462d-9ffd-43a9571b9d89",
@@ -88,7 +97,7 @@
                 {
                     "name": "",
                     "id": "4db35b5f-c40c-4acc-87db-91c652240b0e",
-                    "path": "<XRController>{RightHand}/{SecondaryButton}",
+                    "path": "<XRController>{RightHand}/{TriggerButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -104,6 +113,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "Select",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "43fc59ee-c436-446e-b844-58ac4761f7fc",
+                    "path": "<XRController>{RightHand}/{GripButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ReverseRotate",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
