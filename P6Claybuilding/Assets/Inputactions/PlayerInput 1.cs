@@ -92,22 +92,13 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
             ""id"": ""2f3eb0eb-9ec1-43f7-80f3-10747e17fc82"",
             ""actions"": [
                 {
-                    ""name"": ""MenuToggle"",
+                    ""name"": ""LeftToggleMenu"",
                     ""type"": ""Button"",
                     ""id"": ""222cbb9f-40e6-42bc-a710-38933a9a09a9"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": true
-                },
-                {
-                    ""name"": ""LeftSet"",
-                    ""type"": ""Button"",
-                    ""id"": ""b589aebe-b22a-4ddf-a7f1-cf8187dbc330"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
                 },
                 {
                     ""name"": ""leftDelete"",
@@ -128,18 +119,27 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""ReverseRotate"",
+                    ""name"": ""SelectAndSet"",
                     ""type"": ""Button"",
-                    ""id"": ""89bdd3c6-e18f-4f1d-977a-ad862c687f0e"",
+                    ""id"": ""5cb896b8-2a85-462d-9ffd-43a9571b9d89"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Select"",
+                    ""name"": ""FlatRotate"",
                     ""type"": ""Button"",
-                    ""id"": ""5cb896b8-2a85-462d-9ffd-43a9571b9d89"",
+                    ""id"": ""30dbd18f-1871-455b-98d9-525027068458"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Deselect"",
+                    ""type"": ""Button"",
+                    ""id"": ""ac873255-605a-448e-98a9-f7f2c25162ca"",
                     ""expectedControlType"": """",
                     ""processors"": """",
                     ""interactions"": """",
@@ -150,22 +150,11 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""7181944f-3ad7-48a0-936b-f87fa8908c1a"",
-                    ""path"": ""<XRController>{RightHand}/primaryButton"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": """",
-                    ""action"": ""MenuToggle"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
-                    ""id"": ""133372fe-f333-4c23-b5bd-382b1a1c53b5"",
                     ""path"": ""<XRController>{LeftHand}/{PrimaryButton}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""LeftSet"",
+                    ""action"": ""LeftToggleMenu"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -183,7 +172,7 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""4db35b5f-c40c-4acc-87db-91c652240b0e"",
-                    ""path"": ""<XRController>{RightHand}/{TriggerButton}"",
+                    ""path"": ""<XRController>{RightHand}/{PrimaryButton}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
@@ -194,22 +183,33 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""c57eaa93-30dd-4677-baec-ff01dec3b5a0"",
-                    ""path"": ""<XRController>{LeftHand}/{GripButton}"",
+                    ""path"": ""<XRController>{RightHand}/{TriggerButton}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Select"",
+                    ""action"": ""SelectAndSet"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
-                    ""id"": ""43fc59ee-c436-446e-b844-58ac4761f7fc"",
+                    ""id"": ""c8a4defc-cffe-44f6-9157-5fa10c8e262c"",
+                    ""path"": ""<XRController>{RightHand}/{SecondaryButton}"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""FlatRotate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""7e6c624a-ba95-4ed0-a25f-c69b9c01058b"",
                     ""path"": ""<XRController>{RightHand}/{GripButton}"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""ReverseRotate"",
+                    ""action"": ""Deselect"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -220,12 +220,12 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
 }");
         // Main
         m_Main = asset.FindActionMap("Main", throwIfNotFound: true);
-        m_Main_MenuToggle = m_Main.FindAction("MenuToggle", throwIfNotFound: true);
-        m_Main_LeftSet = m_Main.FindAction("LeftSet", throwIfNotFound: true);
+        m_Main_LeftToggleMenu = m_Main.FindAction("LeftToggleMenu", throwIfNotFound: true);
         m_Main_leftDelete = m_Main.FindAction("leftDelete", throwIfNotFound: true);
         m_Main_Rotate = m_Main.FindAction("Rotate", throwIfNotFound: true);
-        m_Main_ReverseRotate = m_Main.FindAction("ReverseRotate", throwIfNotFound: true);
-        m_Main_Select = m_Main.FindAction("Select", throwIfNotFound: true);
+        m_Main_SelectAndSet = m_Main.FindAction("SelectAndSet", throwIfNotFound: true);
+        m_Main_FlatRotate = m_Main.FindAction("FlatRotate", throwIfNotFound: true);
+        m_Main_Deselect = m_Main.FindAction("Deselect", throwIfNotFound: true);
     }
 
     ~@XRbutton()
@@ -306,12 +306,12 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
     // Main
     private readonly InputActionMap m_Main;
     private List<IMainActions> m_MainActionsCallbackInterfaces = new List<IMainActions>();
-    private readonly InputAction m_Main_MenuToggle;
-    private readonly InputAction m_Main_LeftSet;
+    private readonly InputAction m_Main_LeftToggleMenu;
     private readonly InputAction m_Main_leftDelete;
     private readonly InputAction m_Main_Rotate;
-    private readonly InputAction m_Main_ReverseRotate;
-    private readonly InputAction m_Main_Select;
+    private readonly InputAction m_Main_SelectAndSet;
+    private readonly InputAction m_Main_FlatRotate;
+    private readonly InputAction m_Main_Deselect;
     /// <summary>
     /// Provides access to input actions defined in input action map "Main".
     /// </summary>
@@ -324,13 +324,9 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// </summary>
         public MainActions(@XRbutton wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "Main/MenuToggle".
+        /// Provides access to the underlying input action "Main/LeftToggleMenu".
         /// </summary>
-        public InputAction @MenuToggle => m_Wrapper.m_Main_MenuToggle;
-        /// <summary>
-        /// Provides access to the underlying input action "Main/LeftSet".
-        /// </summary>
-        public InputAction @LeftSet => m_Wrapper.m_Main_LeftSet;
+        public InputAction @LeftToggleMenu => m_Wrapper.m_Main_LeftToggleMenu;
         /// <summary>
         /// Provides access to the underlying input action "Main/leftDelete".
         /// </summary>
@@ -340,13 +336,17 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Rotate => m_Wrapper.m_Main_Rotate;
         /// <summary>
-        /// Provides access to the underlying input action "Main/ReverseRotate".
+        /// Provides access to the underlying input action "Main/SelectAndSet".
         /// </summary>
-        public InputAction @ReverseRotate => m_Wrapper.m_Main_ReverseRotate;
+        public InputAction @SelectAndSet => m_Wrapper.m_Main_SelectAndSet;
         /// <summary>
-        /// Provides access to the underlying input action "Main/Select".
+        /// Provides access to the underlying input action "Main/FlatRotate".
         /// </summary>
-        public InputAction @Select => m_Wrapper.m_Main_Select;
+        public InputAction @FlatRotate => m_Wrapper.m_Main_FlatRotate;
+        /// <summary>
+        /// Provides access to the underlying input action "Main/Deselect".
+        /// </summary>
+        public InputAction @Deselect => m_Wrapper.m_Main_Deselect;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -373,24 +373,24 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         {
             if (instance == null || m_Wrapper.m_MainActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_MainActionsCallbackInterfaces.Add(instance);
-            @MenuToggle.started += instance.OnMenuToggle;
-            @MenuToggle.performed += instance.OnMenuToggle;
-            @MenuToggle.canceled += instance.OnMenuToggle;
-            @LeftSet.started += instance.OnLeftSet;
-            @LeftSet.performed += instance.OnLeftSet;
-            @LeftSet.canceled += instance.OnLeftSet;
+            @LeftToggleMenu.started += instance.OnLeftToggleMenu;
+            @LeftToggleMenu.performed += instance.OnLeftToggleMenu;
+            @LeftToggleMenu.canceled += instance.OnLeftToggleMenu;
             @leftDelete.started += instance.OnLeftDelete;
             @leftDelete.performed += instance.OnLeftDelete;
             @leftDelete.canceled += instance.OnLeftDelete;
             @Rotate.started += instance.OnRotate;
             @Rotate.performed += instance.OnRotate;
             @Rotate.canceled += instance.OnRotate;
-            @ReverseRotate.started += instance.OnReverseRotate;
-            @ReverseRotate.performed += instance.OnReverseRotate;
-            @ReverseRotate.canceled += instance.OnReverseRotate;
-            @Select.started += instance.OnSelect;
-            @Select.performed += instance.OnSelect;
-            @Select.canceled += instance.OnSelect;
+            @SelectAndSet.started += instance.OnSelectAndSet;
+            @SelectAndSet.performed += instance.OnSelectAndSet;
+            @SelectAndSet.canceled += instance.OnSelectAndSet;
+            @FlatRotate.started += instance.OnFlatRotate;
+            @FlatRotate.performed += instance.OnFlatRotate;
+            @FlatRotate.canceled += instance.OnFlatRotate;
+            @Deselect.started += instance.OnDeselect;
+            @Deselect.performed += instance.OnDeselect;
+            @Deselect.canceled += instance.OnDeselect;
         }
 
         /// <summary>
@@ -402,24 +402,24 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <seealso cref="MainActions" />
         private void UnregisterCallbacks(IMainActions instance)
         {
-            @MenuToggle.started -= instance.OnMenuToggle;
-            @MenuToggle.performed -= instance.OnMenuToggle;
-            @MenuToggle.canceled -= instance.OnMenuToggle;
-            @LeftSet.started -= instance.OnLeftSet;
-            @LeftSet.performed -= instance.OnLeftSet;
-            @LeftSet.canceled -= instance.OnLeftSet;
+            @LeftToggleMenu.started -= instance.OnLeftToggleMenu;
+            @LeftToggleMenu.performed -= instance.OnLeftToggleMenu;
+            @LeftToggleMenu.canceled -= instance.OnLeftToggleMenu;
             @leftDelete.started -= instance.OnLeftDelete;
             @leftDelete.performed -= instance.OnLeftDelete;
             @leftDelete.canceled -= instance.OnLeftDelete;
             @Rotate.started -= instance.OnRotate;
             @Rotate.performed -= instance.OnRotate;
             @Rotate.canceled -= instance.OnRotate;
-            @ReverseRotate.started -= instance.OnReverseRotate;
-            @ReverseRotate.performed -= instance.OnReverseRotate;
-            @ReverseRotate.canceled -= instance.OnReverseRotate;
-            @Select.started -= instance.OnSelect;
-            @Select.performed -= instance.OnSelect;
-            @Select.canceled -= instance.OnSelect;
+            @SelectAndSet.started -= instance.OnSelectAndSet;
+            @SelectAndSet.performed -= instance.OnSelectAndSet;
+            @SelectAndSet.canceled -= instance.OnSelectAndSet;
+            @FlatRotate.started -= instance.OnFlatRotate;
+            @FlatRotate.performed -= instance.OnFlatRotate;
+            @FlatRotate.canceled -= instance.OnFlatRotate;
+            @Deselect.started -= instance.OnDeselect;
+            @Deselect.performed -= instance.OnDeselect;
+            @Deselect.canceled -= instance.OnDeselect;
         }
 
         /// <summary>
@@ -461,19 +461,12 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
     public interface IMainActions
     {
         /// <summary>
-        /// Method invoked when associated input action "MenuToggle" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "LeftToggleMenu" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnMenuToggle(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "LeftSet" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnLeftSet(InputAction.CallbackContext context);
+        void OnLeftToggleMenu(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "leftDelete" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
@@ -489,18 +482,25 @@ public partial class @XRbutton: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRotate(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "ReverseRotate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "SelectAndSet" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnReverseRotate(InputAction.CallbackContext context);
+        void OnSelectAndSet(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Select" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "FlatRotate" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSelect(InputAction.CallbackContext context);
+        void OnFlatRotate(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Deselect" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDeselect(InputAction.CallbackContext context);
     }
 }

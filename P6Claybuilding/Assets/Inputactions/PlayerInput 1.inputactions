@@ -6,22 +6,13 @@
             "id": "2f3eb0eb-9ec1-43f7-80f3-10747e17fc82",
             "actions": [
                 {
-                    "name": "MenuToggle",
+                    "name": "LeftToggleMenu",
                     "type": "Button",
                     "id": "222cbb9f-40e6-42bc-a710-38933a9a09a9",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
-                },
-                {
-                    "name": "LeftSet",
-                    "type": "Button",
-                    "id": "b589aebe-b22a-4ddf-a7f1-cf8187dbc330",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
                 },
                 {
                     "name": "leftDelete",
@@ -42,18 +33,27 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "ReverseRotate",
+                    "name": "SelectAndSet",
                     "type": "Button",
-                    "id": "89bdd3c6-e18f-4f1d-977a-ad862c687f0e",
+                    "id": "5cb896b8-2a85-462d-9ffd-43a9571b9d89",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
                 },
                 {
-                    "name": "Select",
+                    "name": "FlatRotate",
                     "type": "Button",
-                    "id": "5cb896b8-2a85-462d-9ffd-43a9571b9d89",
+                    "id": "30dbd18f-1871-455b-98d9-525027068458",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Deselect",
+                    "type": "Button",
+                    "id": "ac873255-605a-448e-98a9-f7f2c25162ca",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -64,22 +64,11 @@
                 {
                     "name": "",
                     "id": "7181944f-3ad7-48a0-936b-f87fa8908c1a",
-                    "path": "<XRController>{RightHand}/primaryButton",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "MenuToggle",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                },
-                {
-                    "name": "",
-                    "id": "133372fe-f333-4c23-b5bd-382b1a1c53b5",
                     "path": "<XRController>{LeftHand}/{PrimaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "LeftSet",
+                    "action": "LeftToggleMenu",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -97,7 +86,7 @@
                 {
                     "name": "",
                     "id": "4db35b5f-c40c-4acc-87db-91c652240b0e",
-                    "path": "<XRController>{RightHand}/{TriggerButton}",
+                    "path": "<XRController>{RightHand}/{PrimaryButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
@@ -108,22 +97,33 @@
                 {
                     "name": "",
                     "id": "c57eaa93-30dd-4677-baec-ff01dec3b5a0",
-                    "path": "<XRController>{LeftHand}/{GripButton}",
+                    "path": "<XRController>{RightHand}/{TriggerButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "Select",
+                    "action": "SelectAndSet",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
-                    "id": "43fc59ee-c436-446e-b844-58ac4761f7fc",
+                    "id": "c8a4defc-cffe-44f6-9157-5fa10c8e262c",
+                    "path": "<XRController>{RightHand}/{SecondaryButton}",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "FlatRotate",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "7e6c624a-ba95-4ed0-a25f-c69b9c01058b",
                     "path": "<XRController>{RightHand}/{GripButton}",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ReverseRotate",
+                    "action": "Deselect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

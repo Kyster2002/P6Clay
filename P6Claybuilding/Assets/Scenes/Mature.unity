@@ -682,9 +682,10 @@ MonoBehaviour:
     type: 3}
   rotateAction: {fileID: 7344055126564669695, guid: 502a7114fce6e334ba5565379b06c9eb,
     type: 3}
-  rotateReverseAction: {fileID: 0}
   highlightAction: {fileID: -8992431583870778256, guid: 502a7114fce6e334ba5565379b06c9eb,
     type: 3}
+  flatRotateAction: {fileID: 0}
+  deselectAction: {fileID: 0}
   maxRayDistance: 100
   placementLayers:
     serializedVersion: 2
@@ -4736,6 +4737,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1480372720759785583, guid: 2762fbbc094a6ba418a2077754ec3149,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4453306307156816263, guid: 2762fbbc094a6ba418a2077754ec3149,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6084722705878030160, guid: 2762fbbc094a6ba418a2077754ec3149,
         type: 3}
       propertyPath: m_LocalPosition.y
@@ -4744,7 +4755,7 @@ PrefabInstance:
     - target: {fileID: 7739907819849309867, guid: 2762fbbc094a6ba418a2077754ec3149,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7804205365323777589, guid: 2762fbbc094a6ba418a2077754ec3149,
         type: 3}

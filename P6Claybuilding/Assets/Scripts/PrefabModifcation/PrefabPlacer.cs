@@ -35,13 +35,16 @@ public class PrefabPlacer : MonoBehaviour
     // Slider component used to control fill level on the selected wall.
     public WallFillSlider wallFillSlider;
 
+
     [Header("Input")]
     // Input actions for placement, undo, rotation, and highlighting.
     public InputActionReference placeAction;
     public InputActionReference undoAction;
     public InputActionReference rotateAction;
-    public InputActionReference rotateReverseAction;
     public InputActionReference highlightAction;
+    public InputActionReference flatRotateAction;
+    public InputActionReference deselectAction;
+
 
     [Header("Placement Settings")]
     // Maximum distance for placement raycasts.
@@ -97,12 +100,13 @@ public class PrefabPlacer : MonoBehaviour
     private bool hasLaidDown = false;
     // Quaternion storing the ghost’s manual rotation state.
     private Quaternion manualRotation = Quaternion.identity;
+    private float highlightCooldownTimer = 0f;
+    private const float highlightCooldownDuration = 0.1f; // 100ms is enough
 
-    /// <summary>
-    /// 0–3 = upright (0°,90°,180°,270° around Y)
-    /// 4–7 = laid flat (tilted 90° on X, then yawed 0°,90°,180°,270°)
-    /// </summary>
-    private int rotatePhase = 0;
+
+    private int uprightPhase = 0; // 0–3
+    private int flatPhase = 0;    // 0–3
+    private bool isFlat = false;
 
     [Header("Visual Ray")]
     // LineRenderer used to display a laser pointer.
@@ -119,8 +123,10 @@ public class PrefabPlacer : MonoBehaviour
         placeAction.action.performed += OnPlace;
         undoAction.action.performed += OnUndo;
         rotateAction.action.performed += OnRotate;
-        rotateReverseAction.action.performed += OnRotateReverse;
         highlightAction.action.performed += OnHighlightWall;
+        flatRotateAction.action.performed += OnRotateFlat;
+        deselectAction.action.performed += OnDeselect;
+
     }
 
     /// <summary>
@@ -132,8 +138,9 @@ public class PrefabPlacer : MonoBehaviour
         placeAction.action.performed -= OnPlace;
         undoAction.action.performed -= OnUndo;
         rotateAction.action.performed -= OnRotate;
-        rotateReverseAction.action.performed += OnRotateReverse;
         highlightAction.action.performed -= OnHighlightWall; // ensure highlight unhooked
+        deselectAction.action.performed -= OnDeselect;
+
     }
 
     /// <summary>
@@ -168,9 +175,9 @@ public class PrefabPlacer : MonoBehaviour
         UpdateVisualRay();
         HandleGhostPreview();
 
-        // (optional) log place trigger, but remove rotate in Update entirely:
-        if (placeAction.action.triggered)
-            Debug.Log("Place action triggered in Update()");
+
+        if (highlightCooldownTimer > 0f)
+            highlightCooldownTimer -= Time.deltaTime;
     }
 
     /// <summary>
@@ -181,54 +188,42 @@ public class PrefabPlacer : MonoBehaviour
     {
         if (ghostInstance == null) return;
 
-        // advance and wrap
-        rotatePhase = (rotatePhase + 1) % 8;
-
-        if (rotatePhase < 4)
+        if (isFlat)
         {
-            // upright: yaw only
-            float yaw = rotatePhase * 90f;
-            manualRotation = Quaternion.Euler(0f, yaw, 0f);
+            flatPhase = (flatPhase + 1) % 4;
+            float yaw = flatPhase * 90f;
+            manualRotation = Quaternion.Euler(90f, yaw, 0f); // Laid down
+            Debug.Log($"🟫 Flat rotate → {flatPhase} (Yaw: {yaw})");
         }
         else
         {
-            // laid flat: tilt 90° on X, then yaw
-            float yaw = (rotatePhase - 4) * 90f;
-            manualRotation = Quaternion.Euler(0f, yaw, 90f);
+            uprightPhase = (uprightPhase + 1) % 4;
+            float yaw = uprightPhase * 90f;
+            manualRotation = Quaternion.Euler(0f, yaw, 0f); // Upright
+            Debug.Log($"🟦 Upright rotate → {uprightPhase} (Yaw: {yaw})");
         }
 
-        // apply and remember
         ghostInstance.transform.rotation = manualRotation;
-        Debug.Log($"Rotate phase {rotatePhase}: {manualRotation.eulerAngles}");
     }
 
-        /// <summary>
-    /// Backwards through 0–7.
-    /// </summary>
-    void OnRotateReverse(InputAction.CallbackContext ctx)
+
+
+    void OnRotateFlat(InputAction.CallbackContext ctx)
     {
-        if (ghostInstance == null) return;
+        isFlat = !isFlat;
 
-        // subtract 1 mod 8
-        rotatePhase = (rotatePhase + 7) % 8;
+        float yaw = isFlat ? flatPhase * 90f : uprightPhase * 90f;
+        manualRotation = isFlat
+            ? Quaternion.Euler(90f, yaw, 0f)
+            : Quaternion.Euler(0f, yaw, 0f);
 
-        float yaw;
-        if (rotatePhase < 4)
-        {
-            // upright
-            yaw = rotatePhase * 90f;
-            manualRotation = Quaternion.Euler(0f, yaw, 0f);
-        }
-        else
-        {
-            // flat
-            yaw = (rotatePhase - 4) * 90f;
-            manualRotation = Quaternion.Euler(0f, yaw, 90f);
-        }
+        if (ghostInstance != null)
+            ghostInstance.transform.rotation = manualRotation;
 
-        ghostInstance.transform.rotation = manualRotation;
-        Debug.Log($"Reverse rotate → phase {rotatePhase}: {manualRotation.eulerAngles}");
+        Debug.Log(isFlat ? $"🔄 Toggled to FLAT ({yaw}° yaw)" : $"🔄 Toggled to UPRIGHT ({yaw}° yaw)");
     }
+
+
 
     /// <summary>
     /// Callback for the placeAction performed event: attempts to place the selected prefab at the ghost position.
@@ -246,7 +241,8 @@ public class PrefabPlacer : MonoBehaviour
     void HandleGhostPreview()
     {
         // Only update ghost if the menu is open.
-        if (!isMenuOpen) return;
+        if (!isMenuOpen && spawnerRef.selectedPrefab == null) return;
+
 
         GameObject prefab = spawnerRef.selectedPrefab;
         if (prefab == null || rayOrigin == null) return;
@@ -302,6 +298,11 @@ public class PrefabPlacer : MonoBehaviour
         }
     }
 
+    void OnDeselect(InputAction.CallbackContext ctx)
+    {
+        Debug.Log("🧹 Manual deselect triggered.");
+        DeselectWall();
+    }
 
 
     /// <summary>
@@ -562,7 +563,7 @@ public class PrefabPlacer : MonoBehaviour
     /// </summary>
     void OnHighlightWall(InputAction.CallbackContext ctx)
     {
-        if (!ctx.performed)
+        if (!ctx.performed || highlightCooldownTimer > 0f)
             return;
 
         // Fire a yellow debug ray from the controller
@@ -627,11 +628,7 @@ public class PrefabPlacer : MonoBehaviour
                 Debug.LogWarning("❌ Wall is NOT on 'Walls' layer. No animation menu shown.");
             }
         }
-        else
-        {
-            // If nothing was hit, clear any selection
-            DeselectWall();
-        }
+
     }
 
     /// <summary>
@@ -772,14 +769,17 @@ public class PrefabPlacer : MonoBehaviour
         placedObjects.Add(placed);
         manualRotation = finalRot;
 
+        // Prevent immediate highlight/select
+        highlightCooldownTimer = highlightCooldownDuration;
+
         // Set rotation phase for DripFillController
         DripFillController controller = placed.GetComponent<DripFillController>();
         if (controller != null)
         {
-            
             controller.OnPlaced();
         }
     }
+
 
 
     /// <summary>
@@ -885,14 +885,15 @@ public class PrefabPlacer : MonoBehaviour
 
         if (!open)
         {
-            // Ensure no ghost remains when menu is closed
-            ClearGhost();
+            // Don’t clear ghost here anymore
+            // ClearGhost(); ❌ ← REMOVE THIS LINE
 
-            // Also hide the visual ray immediately
+            // Hide laser as usual
             if (visualRay != null)
                 visualRay.enabled = false;
         }
     }
+
 
     /// <summary>
     /// Computes the combined bounds of all renderers under the given object.

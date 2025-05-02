@@ -35,6 +35,13 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public Vector3 offsetPhase180 = new Vector3(0f, 0.3f, -0.18f);
     public Vector3 offsetPhase270 = new Vector3(0f, 0.3f, -0.18f);
 
+    [Header("Bucket Rotations Per Phase")]
+    public Vector3 bucketRotPhase0 = new Vector3(0f, -90f, 0f);
+    public Vector3 bucketRotPhase90 = new Vector3(0f, 0f, 0f);
+    public Vector3 bucketRotPhase180 = new Vector3(0f, -90f, 0f);
+    public Vector3 bucketRotPhase270 = new Vector3(0f, 0f, 0f);
+
+
     [Header("Particle Offsets Per Rotation Phase (Y is height)")]
     public Vector3 particleOffsetPhase0 = new Vector3(-0.01f, 0.35f, 0f);
     public Vector3 particleOffsetPhase90 = new Vector3(0.07f, 0.35f, -0.01f);
@@ -143,6 +150,33 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
         {
             Destroy(spawnedBucket);
             spawnedBucket = null;
+        }
+    }
+
+    /// <summary>
+    /// Computes the correct bucket offset in local space, based on whether the wall is upright or flat.
+    /// Ensures the bucket always 'pours into' the wall face.
+    /// </summary>
+    Vector3 ComputeBucketOffset()
+    {
+        bool isFlat = Mathf.Abs(boxTransform.eulerAngles.x - 90f) < 10f;
+
+        // Local offset: -Z points "into the wall" for upright; -Y for flat
+        Vector3 localOffset = isFlat
+            ? new Vector3(0f, -0.3f, 0f) // Bucket slightly above flat wall
+            : new Vector3(0f, bucketHeightAboveBox, -0.3f); // Bucket above facing into upright wall
+
+        return boxTransform.rotation * localOffset;
+    }
+
+    Quaternion ComputeBucketRotation()
+    {
+        switch (bucketRotationPhase)
+        {
+            case 1: return Quaternion.Euler(bucketRotPhase90);
+            case 2: return Quaternion.Euler(bucketRotPhase180);
+            case 3: return Quaternion.Euler(bucketRotPhase270);
+            default: return Quaternion.Euler(bucketRotPhase0);
         }
     }
 
@@ -335,57 +369,63 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
     public void StartSmoothFillWithoutDrip()
     {
         Debug.Log($"{gameObject.name}: StartSmoothFillWithoutDrip()");
-        StopAllCoroutines();
+
         isDripping = false;
-        animateWobble = true;
+        animateWobble = false;
+
+        DestroyBucketIfExists();
         currentFillLevel = 0f;
 
-        float slowFillSpeed = fillSpeed;
-        DestroyBucketIfExists();
+        if (bucketPrefab == null) return;
 
-        // Determine rotation phase from boxTransform’s Y angle
-        float yRot = Mathf.Round(boxTransform.eulerAngles.y) % 360f;
-        if (Mathf.Approximately(yRot, 0f)) bucketRotationPhase = 0;
-        else if (Mathf.Approximately(yRot, 90f)) bucketRotationPhase = 1;
-        else if (Mathf.Approximately(yRot, 180f)) bucketRotationPhase = 2;
-        else if (Mathf.Approximately(yRot, 270f)) bucketRotationPhase = 3;
-        else bucketRotationPhase = 0;
+        spawnedBucket = Instantiate(bucketPrefab);
 
-        // Spawn the bucket prefab at the correct offset/rotation
-        if (bucketPrefab != null)
+        Transform boxRoot = FindDeepChild(transform, "Box") ?? FindDeepChild(transform, "Box_Closed");
+        if (boxRoot != null)
         {
-            Vector3 offset = offsetPhase0;
-            Quaternion rot = Quaternion.identity;
-            switch (bucketRotationPhase)
+            Renderer rend = boxRoot.GetComponent<Renderer>();
+            if (rend != null)
             {
-                case 0:
-                    offset = offsetPhase0;
-                    rot = Quaternion.Euler(0, 270, 0);
-                    break;
-                case 1:
-                    offset = offsetPhase90;
-                    rot = Quaternion.Euler(0, 360, 0);
-                    break;
-                case 2:
-                    offset = offsetPhase180;
-                    rot = Quaternion.Euler(0, 270, 0);
-                    break;
-                case 3:
-                    offset = offsetPhase270;
-                    rot = Quaternion.Euler(0, 0, 0);
-                    break;
-            }
-            Vector3 spawnPos = boxTransform.position + boxTransform.rotation * offset;
-            spawnedBucket = Instantiate(bucketPrefab, spawnPos, rot);
-            spawnedBucket.transform.SetParent(transform, worldPositionStays: true);
+                // Use the new rotation-aware offset logic
+                Vector3 offset = ComputeBucketOffset();
+                Vector3 spawnPosition = boxTransform.position + offset;
 
-            var autoPlay = spawnedBucket.GetComponent<AlembicAutoPlay>();
-            if (autoPlay == null)
-                Debug.LogWarning("⚠️ Spawned bucket is missing AlembicAutoPlay script!");
+                spawnedBucket.transform.position = spawnPosition;
+                spawnedBucket.transform.rotation = ComputeBucketRotation();
+                spawnedBucket.transform.localScale = Vector3.one;
+
+                // Do NOT parent under box to avoid inheriting scale
+                spawnedBucket.transform.SetParent(null);
+            }
+            else
+            {
+                Debug.LogWarning("⚠️ Box has no renderer!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("⚠️ Could not find Box or Box_Closed!");
         }
 
-        StartCoroutine(SmoothFillAnimation(slowFillSpeed));
+        StartCoroutine(SmoothFillAnimation(fillSpeed));
     }
+
+
+
+
+
+    private Bounds GetCombinedBounds(GameObject obj)
+    {
+        Renderer[] renderers = obj.GetComponentsInChildren<Renderer>();
+        if (renderers.Length == 0)
+            return new Bounds(obj.transform.position, Vector3.zero);
+
+        Bounds bounds = renderers[0].bounds;
+        foreach (Renderer r in renderers)
+            bounds.Encapsulate(r.bounds);
+        return bounds;
+    }
+
 
     /// <summary>
     /// Smooth fill coroutine: waits for fillStartDelay then increments fill until full,
