@@ -386,7 +386,6 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             Renderer rend = boxRoot.GetComponent<Renderer>();
             if (rend != null)
             {
-                // Use the new rotation-aware offset logic
                 Vector3 offset = ComputeBucketOffset();
                 Vector3 spawnPosition = boxTransform.position + offset;
 
@@ -394,7 +393,6 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
                 spawnedBucket.transform.rotation = ComputeBucketRotation();
                 spawnedBucket.transform.localScale = Vector3.one;
 
-                // Do NOT parent under box to avoid inheriting scale
                 spawnedBucket.transform.SetParent(null);
             }
             else
@@ -407,8 +405,10 @@ public class DripFillController : MonoBehaviour, IPointerClickHandler
             Debug.LogWarning("⚠️ Could not find Box or Box_Closed!");
         }
 
+        animateWobble = true; // ✅ <- THIS is what was missing
         StartCoroutine(SmoothFillAnimation(fillSpeed));
     }
+
 
 
 
