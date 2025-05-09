@@ -143,14 +143,13 @@ public class PrefabPlacer : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// Called once at the start of the scene. Begins a coroutine to disable the laser pointer next frame.
-    /// </summary>
     void Start()
     {
-        // Disable the visual ray on the very next frame to avoid flicker.
+
         StartCoroutine(DisableLaserNextFrame());
     }
+
+
 
     /// <summary>
     /// Coroutine that waits one frame, then disables the LineRenderer used as the laser pointer.
@@ -192,19 +191,20 @@ public class PrefabPlacer : MonoBehaviour
         {
             flatPhase = (flatPhase + 1) % 4;
             float yaw = flatPhase * 90f;
-            manualRotation = Quaternion.Euler(90f, yaw, 0f); // Laid down
+            manualRotation = Quaternion.Euler(0f, yaw, 90f); // ✅ FLAT fixed (Z-axis)
             Debug.Log($"🟫 Flat rotate → {flatPhase} (Yaw: {yaw})");
         }
         else
         {
             uprightPhase = (uprightPhase + 1) % 4;
             float yaw = uprightPhase * 90f;
-            manualRotation = Quaternion.Euler(0f, yaw, 0f); // Upright
+            manualRotation = Quaternion.Euler(0f, yaw, 0f); // ✅ Upright (Y-axis)
             Debug.Log($"🟦 Upright rotate → {uprightPhase} (Yaw: {yaw})");
         }
 
         ghostInstance.transform.rotation = manualRotation;
     }
+
 
 
 
@@ -214,8 +214,9 @@ public class PrefabPlacer : MonoBehaviour
 
         float yaw = isFlat ? flatPhase * 90f : uprightPhase * 90f;
         manualRotation = isFlat
-            ? Quaternion.Euler(90f, yaw, 0f)
-            : Quaternion.Euler(0f, yaw, 0f);
+            ? Quaternion.Euler(0f, yaw, 90f)   // Z-axis now has 90° rotation
+            : Quaternion.Euler(0f, yaw, 0f);   // Upright mode
+
 
         if (ghostInstance != null)
             ghostInstance.transform.rotation = manualRotation;
